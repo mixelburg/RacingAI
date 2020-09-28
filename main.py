@@ -6,8 +6,14 @@ import pygame
 from random import choice
 import os
 
-
 pygame.init()
+
+TRANSPARENT_PIXEL = {
+    "R": 255,
+    "G": 255,
+    "B": 255,
+    "A": 0
+}
 
 GAME_WINDOW_RESOLUTION = (1518, 778)
 MAIN_WINDOW_RESOLUTION = (2000, 778)
@@ -28,6 +34,13 @@ MAIN_BG_IMG = pygame.transform.scale(pygame.image.load(os.path.join(IMG_SRC_FOLD
                                      GAME_WINDOW_RESOLUTION)
 TRACK = pygame.transform.scale2x(pygame.image.load(os.path.join(IMG_SRC_FOLDER, "track.png")))
 RADAR = pygame.image.load(os.path.join(IMG_SRC_FOLDER, "radar.png"))
+RADAR_ANGLES = {
+    "forward": 0,
+    "left_corner": 45,
+    "right_corner": -45,
+    "left": 90,
+    "right": -90
+}
 
 BG_POSITION = (0, 0)
 TRACK_POSITION = (-20, -11)
@@ -35,7 +48,18 @@ CAR_POSITION = (700, 190)
 
 STAT_FONT = pygame.font.SysFont("comicsans", 50)
 RED_COLOR = (255, 0, 0)
+TEXT_MAP = {
+    "best_car_sector": (10, 10),
+    "best_car_score": (10, 70),
+    "best_car_img_text": (10, 130),
+    "best_car_img": (100, 110),
+    "best_car_speed": (10, 190),
 
+    "global_stats_sector": (10, 400),
+    "max_score": (10, 460),
+    "alive": (10, 510),
+    "generation": (10, 560)
+}
 
 max_score = 0
 gen_num = 1
@@ -148,35 +172,24 @@ class Border:
 
 
 class Radar:
-    def __init__(self, car, border):
-        self.img = RADAR
-
-        self.angle = car.angle
-        self.x = car.x + 20
-        self.y = car.y + 10
+    def __init__(self, car):
+        self.x = car.x + car.img.get_width() // 2
+        self.y = car.y + car.img.get_height() // 2
 
     def calc_x_y(self, dist, angle):
-        self.angle = angle
-        real_angle = self.angle
-
-        if real_angle == 90:
+        if angle == 90:
             y = int(self.y - dist)
             x = self.x
         else:
-            x = int(self.x + math.cos(math.radians(real_angle)) * dist)
-            y = int(self.y - math.sin(math.radians(real_angle)) * dist)
+            x = int(self.x + math.cos(math.radians(angle)) * dist)
+            y = int(self.y - math.sin(math.radians(angle)) * dist)
         return x, y
-
-    def get_mask(self):
-        return pygame.mask.from_surface(self.img)
 
     def move(self, car):
         self.x, self.y = self.calc_x_y(car.vel, car.angle)
 
     def find_distance(self, border, angle):
-        x, y = self.x, self.y
-
-        cnt = -20
+        cnt = 0
         while cnt < 200:
             x, y = self.calc_x_y(cnt, angle)
             try:
@@ -185,52 +198,53 @@ class Radar:
                 if y < 1:
                     y = 1
                 pixel = border.img.get_at((x, y))
-            if pixel[0] == 255 and pixel[1] == 255 and pixel[2] == 255 and pixel[3] == 0:
+            if pixel[0] == TRANSPARENT_PIXEL["R"] and pixel[1] == TRANSPARENT_PIXEL["G"]\
+                    and pixel[2] == TRANSPARENT_PIXEL["B"] and pixel[3] == TRANSPARENT_PIXEL["A"]:
                 cnt += 1
             else:
                 break
         return cnt
 
-    def draw(self, main_window, game_window, car, border):
-        dist_forward = self.find_distance(border, car.angle)
-        dist_left_angle = self.find_distance(border, car.angle + 45)
-        dist_right_angle = self.find_distance(border, car.angle - 45)
-        dist_left = self.find_distance(border, car.angle + 90)
-        dist_right = self.find_distance(border, car.angle - 90)
+    def draw(self, game_window, car, border):
+        dist_forward = self.find_distance(border, car.angle + RADAR_ANGLES["forward"])
+        dist_left_corner = self.find_distance(border, car.angle + RADAR_ANGLES["left_corner"])
+        dist_right_corner = self.find_distance(border, car.angle + RADAR_ANGLES["right_corner"])
+        dist_left = self.find_distance(border, car.angle + RADAR_ANGLES["left"])
+        dist_right = self.find_distance(border, car.angle + RADAR_ANGLES["right"])
 
         thickness = 3
 
-        x, y = self.calc_x_y(dist_forward, car.angle)
+        x, y = self.calc_x_y(dist_forward, car.angle + RADAR_ANGLES["forward"])
         pygame.draw.line(game_window, RED_COLOR, (x, y), (self.x, self.y), thickness)
 
-        x, y = self.calc_x_y(dist_left_angle, car.angle + 45)
+        x, y = self.calc_x_y(dist_left_corner, car.angle + RADAR_ANGLES["left_corner"])
         pygame.draw.line(game_window, RED_COLOR, (x, y), (self.x, self.y), thickness)
 
-        x, y = self.calc_x_y(dist_right_angle, car.angle - 45)
+        x, y = self.calc_x_y(dist_right_corner, car.angle + RADAR_ANGLES["right_corner"])
         pygame.draw.line(game_window, RED_COLOR, (x, y), (self.x, self.y), thickness)
 
-        x, y = self.calc_x_y(dist_left, car.angle + 90)
+        x, y = self.calc_x_y(dist_left, car.angle + RADAR_ANGLES["left"])
         pygame.draw.line(game_window, RED_COLOR, (x, y), (self.x, self.y), thickness)
 
-        x, y = self.calc_x_y(dist_right, car.angle - 90)
+        x, y = self.calc_x_y(dist_right, RADAR_ANGLES["right"])
         pygame.draw.line(game_window, RED_COLOR, (x, y), (self.x, self.y), thickness)
 
     def locate(self, car, border):
-        dist_forward = self.find_distance(border, car.angle)
-        dist_left_angle = self.find_distance(border, car.angle + 45)
-        dist_right_angle = self.find_distance(border, car.angle - 45)
-        dist_left = self.find_distance(border, car.angle + 90)
-        dist_right = self.find_distance(border, car.angle - 90)
+        dist_forward = self.find_distance(border, car.angle + RADAR_ANGLES["forward"])
+        dist_left_corner = self.find_distance(border, car.angle + RADAR_ANGLES["left_corner"])
+        dist_right_corner = self.find_distance(border, RADAR_ANGLES["right_corner"])
+        dist_left = self.find_distance(border, RADAR_ANGLES["left"])
+        dist_right = self.find_distance(border, RADAR_ANGLES["right"])
 
-        return dist_forward, dist_left_angle, dist_right_angle, dist_left, dist_right
+        return dist_forward, dist_left_corner, dist_right_corner, dist_left, dist_right
 
 
-def get_best_score(cars):
-    best_score = 0
+def get_best_car(cars):
+    best_car_data = {"score": -1000, "img": RADAR, "speed": 0}
     for car in cars:
-        if car.score > best_score:
-            best_score = car.score
-    return best_score
+        if car.score > best_car_data["score"]:
+            best_car_data = {"score": car.score, "img": car.img, "speed": car.vel}
+    return best_car_data
 
 
 def draw(main_window, game_window, border, cars, radars, num_alive):
@@ -241,20 +255,34 @@ def draw(main_window, game_window, border, cars, radars, num_alive):
 
     for i, car in enumerate(cars):
         car.draw(game_window)
-        radars[i].draw(main_window, game_window, car, border)
+        radars[i].draw(game_window, car, border)
 
-    text = STAT_FONT.render(f"Best score: {get_best_score(cars)}", 1, RED_COLOR)
-    main_window.blit(text, (10, 10))
+    best_car_data = get_best_car(cars)
+    text = STAT_FONT.render("_____Best car_____", 1, RED_COLOR)
+    main_window.blit(text, TEXT_MAP["best_car_sector"])
+
+    text = STAT_FONT.render(f"Score: {best_car_data['score']}", 1, RED_COLOR)
+    main_window.blit(text, TEXT_MAP["best_car_score"])
+    text = STAT_FONT.render("Img:", 1, RED_COLOR)
+    main_window.blit(text, TEXT_MAP["best_car_img_text"])
+    best_car_data['img'] = pygame.transform.scale(best_car_data['img'],
+                                                  (int(CAR_INITIAL_SIZE[0] * 0.7), int(CAR_INITIAL_SIZE[1] * 0.7)))
+    main_window.blit(best_car_data['img'], TEXT_MAP["best_car_img"])
+    text = STAT_FONT.render(f"Speed: {round(best_car_data['speed'], 2)}", 1, RED_COLOR)
+    main_window.blit(text, TEXT_MAP["best_car_speed"])
+
+    text = STAT_FONT.render("_____Global stats_____", 1, RED_COLOR)
+    main_window.blit(text, TEXT_MAP["global_stats_sector"])
     text = STAT_FONT.render(f"Max Score: {max_score}", 1, RED_COLOR)
-    main_window.blit(text, (10, 70))
+    main_window.blit(text, TEXT_MAP["max_score"])
     text = STAT_FONT.render(f"Alive: {num_alive}", 1, RED_COLOR)
-    main_window.blit(text, (10, 130))
+    main_window.blit(text, TEXT_MAP["alive"])
     text = STAT_FONT.render(f"Generation: {gen_num}", 1, RED_COLOR)
-    main_window.blit(text, (10, 190))
+    main_window.blit(text, TEXT_MAP["generation"])
 
 
 def main(genomes, config):
-    global gen_num, score
+    global gen_num
 
     counter = 0
 
@@ -271,7 +299,7 @@ def main(genomes, config):
         nets.append(net)
         car = Car(CAR_POSITION[0], CAR_POSITION[1])
         cars.append(car)
-        radars.append(Radar(car, border))
+        radars.append(Radar(car))
         g.fitness = 0
         gens.append(g)
 
@@ -287,7 +315,6 @@ def main(genomes, config):
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                run_frag = False
                 pygame.quit()
                 exit()
 
