@@ -6,6 +6,7 @@ import pygame
 from random import choice
 import os
 import json
+import concurrent.futures
 
 pygame.init()
 
@@ -319,6 +320,39 @@ def draw(main_window, game_window, border, cars, num_alive):
         font_render(main_window, STAT_FONT, text, RED_COLOR, pos)
 
 
+def process_car(car, cars, gens, nets, border, i, counter):
+    car.move()
+
+    if car.vel > 0.5:
+        gens[i].fitness += car.vel // 5
+
+    data = list(car.locate(border))
+    output = nets[i].activate(data)
+
+    if output[0] > 0.5:
+        car.speed_up()
+    if output[1] > 0.5:
+        car.turn_left()
+    if output[2] > 0.5:
+        car.turn_right()
+
+    if border.collide(car):
+        gens[i].fitness -= 1
+        cars.pop(i)
+        nets.pop(i)
+        gens.pop(i)
+    if counter > 200:
+        if car.vel <= 2:
+            gens[i].fitness -= 1
+            cars.pop(i)
+            nets.pop(i)
+            gens.pop(i)
+    if car.score >= 30000:
+        cars.pop(i)
+        nets.pop(i)
+        gens.pop(i)
+
+
 def main(genomes, config):
     global gen_num
 
@@ -358,37 +392,17 @@ def main(genomes, config):
         if len(cars) == 0:
             break
 
-        for i, car in enumerate(cars):
-            car.move()
+        import time
+        start_time = time.time()
 
-            if car.vel > 0.5:
-                gens[i].fitness += car.vel // 5
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            for i, car in enumerate(cars):
+                executor.submit(process_car, car, cars, gens, nets, border, i, counter)
 
-            data = list(car.locate(border))
-            output = nets[i].activate(data)
+        # for i, car in enumerate(cars):
+        #     process_car(car, cars, gens, nets, border, i, counter)
 
-            if output[0] > 0.5:
-                car.speed_up()
-            if output[1] > 0.5:
-                car.turn_left()
-            if output[2] > 0.5:
-                car.turn_right()
-
-            if border.collide(car):
-                gens[i].fitness -= 1
-                cars.pop(i)
-                nets.pop(i)
-                gens.pop(i)
-            if counter > 200:
-                if car.vel <= 2:
-                    gens[i].fitness -= 1
-                    cars.pop(i)
-                    nets.pop(i)
-                    gens.pop(i)
-            if car.score >= 30000:
-                cars.pop(i)
-                nets.pop(i)
-                gens.pop(i)
+        print(f"--- {float(time.time() - start_time) * 1000} milliseconds---")
 
         draw(main_window, game_window, border, cars, num_alive)
         pygame.display.update()
@@ -421,6 +435,5 @@ if __name__ == '__main__':
     # get the path to a config file
     local_dir = os.path.dirname(__file__)
     config_path = os.path.join(local_dir, "config-feedforward.txt")
-
     # run the NN and th game
     run(config_path)

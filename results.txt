@@ -27,3 +27,15 @@ Date: Tue Sep 29 04:08:18 2020
 Generations: 5
 Max score: 30001
 
+Date: Tue Sep 29 12:14:54 2020 
+Generations: 3
+Max score: 741
+
+Date: Tue Sep 29 12:51:17 2020 
+Generations: 1
+Max score: 4185
+
+Date: Tue Sep 29 20:54:52 2020 
+Generations: 2
+Max score: 15029
+
