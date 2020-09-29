@@ -399,6 +399,8 @@ def main(genomes, config):
             for i, car in enumerate(cars):
                 executor.submit(process_car, car, cars, gens, nets, border, i, counter)
 
+        # old way
+        #
         # for i, car in enumerate(cars):
         #     process_car(car, cars, gens, nets, border, i, counter)
 
