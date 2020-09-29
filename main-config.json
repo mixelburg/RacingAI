@@ -1,0 +1,87 @@
+{
+  "transparent_pixel":
+    {
+      "R": 255,
+      "G": 255,
+      "B": 255,
+      "A": 0
+    },
+
+  "resolutions":
+    {
+      "main_window": [500, 0],
+      "game_window": [1518, 778]
+    },
+
+  "frame_rate": 30,
+
+  "imgs": {
+    "img_src_folder": "imgs",
+    "num": 7,
+    "car_init_size": [200, 100],
+    "car_size": 0.2,
+    "arrow_size": [60, 60],
+    "file_names":
+      {
+        "car": "car_{}.png",
+        "track": "track.png",
+        "surroundings": "surroundings.png",
+        "main_bg": "main_bg.jpg",
+        "radar": "radar.png",
+        "arrow_forward": "forward.png",
+        "arrow_left_corner": "left_corner.png",
+        "arrow_right_corner": "right_corner.png",
+        "arrow_left": "left.png",
+        "arrow_right": "right.png"
+      }
+  },
+
+  "radar":
+    {
+      "angles":
+        {
+          "forward": 0,
+          "left_corner": 45,
+          "right_corner": -45,
+          "left": 90,
+          "right": -90
+        },
+      "max_len": 300,
+      "beam_thickness": 3
+    },
+
+  "positions":
+    {
+      "background": [0, 0],
+      "track": [-20, -11],
+      "car": [700, 190],
+
+      "text_map":
+        {
+          "arrows":
+            {
+              "imgs":
+                {
+                  "init": [10, 310],
+                  "gap": 90
+                },
+              "text":
+                {
+                  "init": [20, 370],
+                  "gap": 90
+                }
+            },
+          "best_car_sector": [10, 10],
+          "best_car_img_scale": 0.7,
+          "global_stats_sector": [10, 500],
+          "gap": 60
+        }
+    },
+
+  "font":
+    {
+      "type": "comicsans",
+      "size": 50,
+      "dist_size": 40
+    }
+}

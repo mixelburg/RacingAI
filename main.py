@@ -5,64 +5,83 @@ import neat
 import pygame
 from random import choice
 import os
+import json
 
 pygame.init()
 
-TRANSPARENT_PIXEL = {
-    "R": 255,
-    "G": 255,
-    "B": 255,
-    "A": 0
-}
+with open("main-config.json") as main_config:
+    main_config_data = json.load(main_config)
 
-GAME_WINDOW_RESOLUTION = (1518, 778)
-MAIN_WINDOW_RESOLUTION = (2000, 778)
+TRANSPARENT_PIXEL = main_config_data["transparent_pixel"]
 
-FRAME_RATE = 30
+GAME_WINDOW_RESOLUTION = main_config_data["resolutions"]["game_window"]
+MAIN_WINDOW_RESOLUTION = [GAME_WINDOW_RESOLUTION[0] + main_config_data["resolutions"]["main_window"][0],
+                          GAME_WINDOW_RESOLUTION[1] + main_config_data["resolutions"]["main_window"][1]]
 
-IMG_SRC_FOLDER = "imgs"
+FRAME_RATE = main_config_data["frame_rate"]
 
-CAR_INITIAL_SIZE = (200, 100)
-CAR_SIZE = 0.2
+IMG_SRC_FOLDER = main_config_data["imgs"]["img_src_folder"]
+
+CAR_INITIAL_SIZE = main_config_data["imgs"]["car_init_size"]
+CAR_SIZE = main_config_data["imgs"]["car_size"]
 CAR_IMGS = []
-for car_i in range(1, 7):
-    CAR_IMGS.append(pygame.transform.scale(pygame.image.load(os.path.join(IMG_SRC_FOLDER, f"car_{car_i}.png")),
-                                           (int(CAR_INITIAL_SIZE[0] * CAR_SIZE), int(CAR_INITIAL_SIZE[1] * CAR_SIZE))))
+for car_i in range(1, main_config_data["imgs"]["num"]):
+    CAR_IMGS.append(pygame.transform.scale(pygame.image.load(os.path.join(
+        IMG_SRC_FOLDER, main_config_data["imgs"]["file_names"]["car"].format(car_i))),
+        (int(CAR_INITIAL_SIZE[0] * CAR_SIZE), int(CAR_INITIAL_SIZE[1] * CAR_SIZE))))
 
-BG_IMG = pygame.transform.scale2x(pygame.image.load(os.path.join(IMG_SRC_FOLDER, "surroundings.png")))
-MAIN_BG_IMG = pygame.transform.scale(pygame.image.load(os.path.join(IMG_SRC_FOLDER, "main_bg.jpg")),
+BG_IMG = pygame.transform.scale2x(pygame.image.load(os.path.join(
+    IMG_SRC_FOLDER, main_config_data["imgs"]["file_names"]["surroundings"])))
+
+MAIN_BG_IMG = pygame.transform.scale(pygame.image.load(os.path.join(IMG_SRC_FOLDER,
+                                                                    main_config_data["imgs"]["file_names"]["main_bg"])),
                                      GAME_WINDOW_RESOLUTION)
-TRACK = pygame.transform.scale2x(pygame.image.load(os.path.join(IMG_SRC_FOLDER, "track.png")))
-RADAR = pygame.image.load(os.path.join(IMG_SRC_FOLDER, "radar.png"))
-RADAR_ANGLES = {
-    "forward": 0,
-    "left_corner": 45,
-    "right_corner": -45,
-    "left": 90,
-    "right": -90
-}
+TRACK = pygame.transform.scale2x(pygame.image.load(os.path.join(IMG_SRC_FOLDER,
+                                                                main_config_data["imgs"]["file_names"]["track"])))
 
-BG_POSITION = (0, 0)
-TRACK_POSITION = (-20, -11)
-CAR_POSITION = (700, 190)
+ARROWS = [
+    pygame.transform.scale(pygame.image.load(
+        os.path.join(IMG_SRC_FOLDER, main_config_data["imgs"]["file_names"]["arrow_left"])),
+        main_config_data["imgs"]["arrow_size"]),
+    pygame.transform.scale(pygame.image.load(
+        os.path.join(IMG_SRC_FOLDER, main_config_data["imgs"]["file_names"]["arrow_left_corner"])),
+        main_config_data["imgs"]["arrow_size"]),
+    pygame.transform.scale(pygame.image.load(
+        os.path.join(IMG_SRC_FOLDER, main_config_data["imgs"]["file_names"]["arrow_forward"])),
+        main_config_data["imgs"]["arrow_size"]),
+    pygame.transform.scale(pygame.image.load(
+        os.path.join(IMG_SRC_FOLDER, main_config_data["imgs"]["file_names"]["arrow_right_corner"])),
+        main_config_data["imgs"]["arrow_size"]),
+    pygame.transform.scale(pygame.image.load(
+        os.path.join(IMG_SRC_FOLDER, main_config_data["imgs"]["file_names"]["arrow_right"])),
+        main_config_data["imgs"]["arrow_size"])
+]
 
-STAT_FONT = pygame.font.SysFont("comicsans", 50)
+
+RADAR_ANGLES = main_config_data["radar"]["angles"]
+RADAR_MAX_LEN = main_config_data["radar"]["max_len"]
+RADAR_BEAM_THICKNESS = main_config_data["radar"]["beam_thickness"]
+
+BG_POSITION = main_config_data["positions"]["background"]
+TRACK_POSITION = main_config_data["positions"]["track"]
+CAR_POSITION = main_config_data["positions"]["car"]
+
+STAT_FONT = pygame.font.SysFont(main_config_data["font"]["type"], main_config_data["font"]["size"])
+DIST_FONT = pygame.font.SysFont(main_config_data["font"]["type"], main_config_data["font"]["dist_size"])
 RED_COLOR = (255, 0, 0)
-TEXT_MAP = {
-    "best_car_sector": (10, 10),
-    "best_car_score": (10, 70),
-    "best_car_img_text": (10, 130),
-    "best_car_img": (100, 110),
-    "best_car_speed": (10, 190),
 
-    "global_stats_sector": (10, 400),
-    "max_score": (10, 460),
-    "alive": (10, 510),
-    "generation": (10, 560)
-}
+TEXT_MAP = main_config_data["positions"]["text_map"]
 
 max_score = 0
-gen_num = 1
+gen_num = 0
+
+
+def save():
+    with open("results.txt", "a+") as results_file:
+        results_file.write(f"Date: {datetime.datetime.now().ctime()} \n")
+        results_file.write(f"Generations: {gen_num}\n")
+        results_file.write(f"Max score: {max_score}\n")
+        results_file.write(f"\n")
 
 
 def blit_rotate_center(surface, image, topleft, angle):
@@ -89,11 +108,20 @@ class Car:
 
         self.x = x
         self.y = y
+        self.rx = x + self.img.get_width() // 2
+        self.ry = y + self.img.get_height() // 2
+
+        self.dist_forward = 0
+        self.dist_left_corner = 0
+        self.dist_right_corner = 0
+        self.dist_left = 0
+        self.dist_right = 0
 
         self.vel = 0
         self.thrust = 0.15
+        self.break_t = 0.15
         self.friction = 0.05
-        self.tilt_speed = 4
+        self.tilt_speed = 4.5
 
         self.angle = 0
 
@@ -104,15 +132,9 @@ class Car:
 
         self.score = 0
 
-    def calc_x_y(self, dist):
-        real_angle = self.angle
-
-        if real_angle == 90:
-            y = int(self.y - dist)
-            x = self.x
-        else:
-            x = int(self.x + math.cos(math.radians(real_angle)) * dist)
-            y = int(self.y - math.sin(math.radians(real_angle)) * dist)
+    def calc_x_y(self, x, y, dist, angle):
+        x = int(x + math.cos(math.radians(angle)) * dist)
+        y = int(y - math.sin(math.radians(angle)) * dist)
         return x, y
 
     def move(self):
@@ -122,7 +144,8 @@ class Car:
         self.score += int(self.vel)
         if self.score > max_score:
             max_score = self.score
-        self.x, self.y = self.calc_x_y(self.vel)
+        self.x, self.y = self.calc_x_y(self.x, self.y, self.vel, self.angle)
+        self.rx, self.ry = self.x + self.img.get_width() // 2, self.y + self.img.get_height() // 2
 
     def slow_down(self):
         if self.vel > 0:
@@ -134,6 +157,10 @@ class Car:
         if self.vel < self.MAX_VEL:
             self.vel += self.thrust
 
+    def speed_break(self):
+        if self.vel >= 0 + self.break_t:
+            self.vel -= self.break_t
+
     def turn_right(self):
         if self.vel > 0:
             self.angle -= self.tilt_speed
@@ -142,8 +169,49 @@ class Car:
         if self.vel > 0:
             self.angle += self.tilt_speed
 
+    def find_distance(self, border, angle):
+        cnt = 0
+        while cnt < RADAR_MAX_LEN:
+            x, y = self.calc_x_y(self.rx, self.ry, cnt, angle)
+            try:
+                pixel = border.img.get_at((x, y))
+            except:
+                if y < 1:
+                    y = 1
+                pixel = border.img.get_at((x, y))
+            if pixel[0] == TRANSPARENT_PIXEL["R"] and pixel[1] == TRANSPARENT_PIXEL["G"]\
+                    and pixel[2] == TRANSPARENT_PIXEL["B"] and pixel[3] == TRANSPARENT_PIXEL["A"]:
+                cnt += 1
+            else:
+                break
+        return cnt
+
     def draw(self, window):
         blit_rotate_center(window, self.img, (self.x, self.y), self.angle)
+
+        x, y = self.calc_x_y(self.rx, self.ry, self.dist_forward, self.angle + RADAR_ANGLES["forward"])
+        pygame.draw.line(window, RED_COLOR, (x, y), (self.rx, self.ry), RADAR_BEAM_THICKNESS)
+
+        x, y = self.calc_x_y(self.rx, self.ry, self.dist_left_corner, self.angle + RADAR_ANGLES["left_corner"])
+        pygame.draw.line(window, RED_COLOR, (x, y), (self.rx, self.ry), RADAR_BEAM_THICKNESS)
+
+        x, y = self.calc_x_y(self.rx, self.ry, self.dist_right_corner, self.angle + RADAR_ANGLES["right_corner"])
+        pygame.draw.line(window, RED_COLOR, (x, y), (self.rx, self.ry), RADAR_BEAM_THICKNESS)
+
+        x, y = self.calc_x_y(self.rx, self.ry, self.dist_left, self.angle + RADAR_ANGLES["left"])
+        pygame.draw.line(window, RED_COLOR, (x, y), (self.rx, self.ry), RADAR_BEAM_THICKNESS)
+
+        x, y = self.calc_x_y(self.rx, self.ry, self.dist_right, self.angle + RADAR_ANGLES["right"])
+        pygame.draw.line(window, RED_COLOR, (x, y), (self.rx, self.ry), RADAR_BEAM_THICKNESS)
+
+    def locate(self, border):
+        self.dist_forward = self.find_distance(border, self.angle + RADAR_ANGLES["forward"])
+        self.dist_left_corner = self.find_distance(border, self.angle + RADAR_ANGLES["left_corner"])
+        self.dist_right_corner = self.find_distance(border, self.angle + RADAR_ANGLES["right_corner"])
+        self.dist_left = self.find_distance(border, self.angle + RADAR_ANGLES["left"])
+        self.dist_right = self.find_distance(border, self.angle + RADAR_ANGLES["right"])
+
+        return self.dist_forward, self.dist_left_corner, self.dist_right_corner, self.dist_left, self.dist_right
 
     def get_mask(self):
         return pygame.mask.from_surface(self.img)
@@ -171,83 +239,37 @@ class Border:
         return False
 
 
-class Radar:
-    def __init__(self, car):
-        self.x = car.x + car.img.get_width() // 2
-        self.y = car.y + car.img.get_height() // 2
-
-    def calc_x_y(self, dist, angle):
-        if angle == 90:
-            y = int(self.y - dist)
-            x = self.x
-        else:
-            x = int(self.x + math.cos(math.radians(angle)) * dist)
-            y = int(self.y - math.sin(math.radians(angle)) * dist)
-        return x, y
-
-    def move(self, car):
-        self.x, self.y = self.calc_x_y(car.vel, car.angle)
-
-    def find_distance(self, border, angle):
-        cnt = 0
-        while cnt < 200:
-            x, y = self.calc_x_y(cnt, angle)
-            try:
-                pixel = border.img.get_at((x, y))
-            except:
-                if y < 1:
-                    y = 1
-                pixel = border.img.get_at((x, y))
-            if pixel[0] == TRANSPARENT_PIXEL["R"] and pixel[1] == TRANSPARENT_PIXEL["G"]\
-                    and pixel[2] == TRANSPARENT_PIXEL["B"] and pixel[3] == TRANSPARENT_PIXEL["A"]:
-                cnt += 1
-            else:
-                break
-        return cnt
-
-    def draw(self, game_window, car, border):
-        dist_forward = self.find_distance(border, car.angle + RADAR_ANGLES["forward"])
-        dist_left_corner = self.find_distance(border, car.angle + RADAR_ANGLES["left_corner"])
-        dist_right_corner = self.find_distance(border, car.angle + RADAR_ANGLES["right_corner"])
-        dist_left = self.find_distance(border, car.angle + RADAR_ANGLES["left"])
-        dist_right = self.find_distance(border, car.angle + RADAR_ANGLES["right"])
-
-        thickness = 3
-
-        x, y = self.calc_x_y(dist_forward, car.angle + RADAR_ANGLES["forward"])
-        pygame.draw.line(game_window, RED_COLOR, (x, y), (self.x, self.y), thickness)
-
-        x, y = self.calc_x_y(dist_left_corner, car.angle + RADAR_ANGLES["left_corner"])
-        pygame.draw.line(game_window, RED_COLOR, (x, y), (self.x, self.y), thickness)
-
-        x, y = self.calc_x_y(dist_right_corner, car.angle + RADAR_ANGLES["right_corner"])
-        pygame.draw.line(game_window, RED_COLOR, (x, y), (self.x, self.y), thickness)
-
-        x, y = self.calc_x_y(dist_left, car.angle + RADAR_ANGLES["left"])
-        pygame.draw.line(game_window, RED_COLOR, (x, y), (self.x, self.y), thickness)
-
-        x, y = self.calc_x_y(dist_right, RADAR_ANGLES["right"])
-        pygame.draw.line(game_window, RED_COLOR, (x, y), (self.x, self.y), thickness)
-
-    def locate(self, car, border):
-        dist_forward = self.find_distance(border, car.angle + RADAR_ANGLES["forward"])
-        dist_left_corner = self.find_distance(border, car.angle + RADAR_ANGLES["left_corner"])
-        dist_right_corner = self.find_distance(border, RADAR_ANGLES["right_corner"])
-        dist_left = self.find_distance(border, RADAR_ANGLES["left"])
-        dist_right = self.find_distance(border, RADAR_ANGLES["right"])
-
-        return dist_forward, dist_left_corner, dist_right_corner, dist_left, dist_right
-
-
 def get_best_car(cars):
-    best_car_data = {"score": -1000, "img": RADAR, "speed": 0}
+    best_car_data = {"score": -1000,
+                     "img": CAR_IMGS[0],
+                     "speed": 0,
+                     "distances": [0, 0, 0, 0, 0],
+                     "max_speed": 0
+                     }
     for car in cars:
         if car.score > best_car_data["score"]:
-            best_car_data = {"score": car.score, "img": car.img, "speed": car.vel}
+            best_car_data = {"score": car.score,
+                             "img": car.img,
+                             "speed": car.vel,
+                             "distances":
+                                 [
+                                     car.dist_left,
+                                     car.dist_left_corner,
+                                     car.dist_forward,
+                                     car.dist_right_corner,
+                                     car.dist_right
+                                 ],
+                             "max_speed": car.MAX_VEL
+                             }
     return best_car_data
 
 
-def draw(main_window, game_window, border, cars, radars, num_alive):
+def font_render(window, font, data, color, position):
+    text = font.render(data, 1, color)
+    window.blit(text, position)
+
+
+def draw(main_window, game_window, border, cars, num_alive):
     main_window.blit(MAIN_BG_IMG, (0, 0))
     main_window.blit(game_window, (MAIN_WINDOW_RESOLUTION[0] - GAME_WINDOW_RESOLUTION[0], 0))
     game_window.blit(TRACK, TRACK_POSITION)
@@ -255,30 +277,46 @@ def draw(main_window, game_window, border, cars, radars, num_alive):
 
     for i, car in enumerate(cars):
         car.draw(game_window)
-        radars[i].draw(game_window, car, border)
 
     best_car_data = get_best_car(cars)
-    text = STAT_FONT.render("_____Best car_____", 1, RED_COLOR)
-    main_window.blit(text, TEXT_MAP["best_car_sector"])
 
-    text = STAT_FONT.render(f"Score: {best_car_data['score']}", 1, RED_COLOR)
-    main_window.blit(text, TEXT_MAP["best_car_score"])
-    text = STAT_FONT.render("Img:", 1, RED_COLOR)
-    main_window.blit(text, TEXT_MAP["best_car_img_text"])
+    best_car_sector = [
+        "_____Best car_____",
+        f"Score: {best_car_data['score']}",
+        "Img:",
+        f"Speed: {round(best_car_data['speed'], 2)}",
+        "Distances:"
+    ]
+    for i, text in enumerate(best_car_sector):
+        pos = (TEXT_MAP["best_car_sector"][0], TEXT_MAP["best_car_sector"][1] + i * TEXT_MAP["gap"])
+        font_render(main_window, STAT_FONT, text, RED_COLOR, pos)
+
     best_car_data['img'] = pygame.transform.scale(best_car_data['img'],
-                                                  (int(CAR_INITIAL_SIZE[0] * 0.7), int(CAR_INITIAL_SIZE[1] * 0.7)))
-    main_window.blit(best_car_data['img'], TEXT_MAP["best_car_img"])
-    text = STAT_FONT.render(f"Speed: {round(best_car_data['speed'], 2)}", 1, RED_COLOR)
-    main_window.blit(text, TEXT_MAP["best_car_speed"])
+                                                  (int(CAR_INITIAL_SIZE[0] * TEXT_MAP["best_car_img_scale"]),
+                                                   int(CAR_INITIAL_SIZE[1] * TEXT_MAP["best_car_img_scale"])))
+    pos = (TEXT_MAP["best_car_sector"][0] + 90,
+           TEXT_MAP["best_car_sector"][1] + 2 * TEXT_MAP["gap"] - best_car_data['img'].get_height() // 2 + 15)
+    main_window.blit(best_car_data['img'], pos)
 
-    text = STAT_FONT.render("_____Global stats_____", 1, RED_COLOR)
-    main_window.blit(text, TEXT_MAP["global_stats_sector"])
-    text = STAT_FONT.render(f"Max Score: {max_score}", 1, RED_COLOR)
-    main_window.blit(text, TEXT_MAP["max_score"])
-    text = STAT_FONT.render(f"Alive: {num_alive}", 1, RED_COLOR)
-    main_window.blit(text, TEXT_MAP["alive"])
-    text = STAT_FONT.render(f"Generation: {gen_num}", 1, RED_COLOR)
-    main_window.blit(text, TEXT_MAP["generation"])
+    for i, arrow in enumerate(ARROWS):
+        pos = (TEXT_MAP["arrows"]["imgs"]["init"][0] + i * TEXT_MAP["arrows"]["imgs"]["gap"],
+               TEXT_MAP["arrows"]["imgs"]["init"][1])
+        main_window.blit(arrow, pos)
+
+    for i, dist in enumerate(best_car_data["distances"]):
+        pos = (TEXT_MAP["arrows"]["text"]["init"][0] + i * TEXT_MAP["arrows"]["imgs"]["gap"],
+               TEXT_MAP["arrows"]["text"]["init"][1])
+        font_render(main_window, DIST_FONT, str(dist), RED_COLOR, pos)
+
+    global_stats_sector = [
+        "_____Global stats_____",
+        f"Max Score: {max_score}",
+        f"Alive: {num_alive}",
+        f"Generation: {gen_num}"
+    ]
+    for i, text in enumerate(global_stats_sector):
+        pos = (TEXT_MAP["global_stats_sector"][0], TEXT_MAP["global_stats_sector"][1] + i * TEXT_MAP["gap"])
+        font_render(main_window, STAT_FONT, text, RED_COLOR, pos)
 
 
 def main(genomes, config):
@@ -289,7 +327,6 @@ def main(genomes, config):
     nets = []
     gens = []
     cars = []
-    radars = []
 
     border = Border(BG_POSITION[0], BG_POSITION[1])
 
@@ -299,11 +336,8 @@ def main(genomes, config):
         nets.append(net)
         car = Car(CAR_POSITION[0], CAR_POSITION[1])
         cars.append(car)
-        radars.append(Radar(car))
         g.fitness = 0
         gens.append(g)
-
-    num_alive = len(cars)
 
     game_window = pygame.Surface(GAME_WINDOW_RESOLUTION)
     main_window = pygame.display.set_mode(MAIN_WINDOW_RESOLUTION)
@@ -313,8 +347,11 @@ def main(genomes, config):
         clock.tick(FRAME_RATE)
         counter += 1
 
+        num_alive = len(cars)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                save()
                 pygame.quit()
                 exit()
 
@@ -323,15 +360,11 @@ def main(genomes, config):
 
         for i, car in enumerate(cars):
             car.move()
-            radars[i].move(car)
-
-            if car.score % 2000 == 0:
-                car.MAX_VEL += 0.1
 
             if car.vel > 0.5:
                 gens[i].fitness += car.vel // 5
 
-            data = radars[i].locate(car, border)
+            data = list(car.locate(border))
             output = nets[i].activate(data)
 
             if output[0] > 0.5:
@@ -341,30 +374,23 @@ def main(genomes, config):
             if output[2] > 0.5:
                 car.turn_right()
 
-        # keys = pygame.key.get_pressed()
-        # if keys[pygame.K_w]:
-        #     cars[1].speed_up()
-        # if keys[pygame.K_d]:
-        #     cars[1].turn_right()
-        # if keys[pygame.K_a]:
-        #     cars[1].turn_left()
-
-        for i, car in enumerate(cars):
             if border.collide(car):
                 gens[i].fitness -= 1
                 cars.pop(i)
-                radars.pop(i)
                 nets.pop(i)
                 gens.pop(i)
-            if counter % 60 == 0:
-                if car.vel <= 0.5:
+            if counter > 200:
+                if car.vel <= 2:
                     gens[i].fitness -= 1
                     cars.pop(i)
-                    radars.pop(i)
                     nets.pop(i)
                     gens.pop(i)
+            if car.score >= 30000:
+                cars.pop(i)
+                nets.pop(i)
+                gens.pop(i)
 
-        draw(main_window, game_window, border, cars, radars, num_alive)
+        draw(main_window, game_window, border, cars, num_alive)
         pygame.display.update()
     gen_num += 1
 
@@ -388,11 +414,7 @@ def run(config_file_path):
         winner = population.run(main, 100)
     except pygame.error as e:
         pass
-    with open("results.txt", "a+") as results_file:
-        results_file.write(f"Date: {datetime.datetime.now().ctime()} \n")
-        results_file.write(f"Generations: {gen_num}\n")
-        results_file.write(f"Max score: {max_score}\n")
-        results_file.write(f"\n")
+    save()
 
 
 if __name__ == '__main__':
