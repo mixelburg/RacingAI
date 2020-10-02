@@ -11,70 +11,89 @@ import concurrent.futures
 pygame.init()
 
 with open("main-config.json") as main_config:
-    main_config_data = json.load(main_config)
+    config = json.load(main_config)
 
-TRANSPARENT_PIXEL = main_config_data["transparent_pixel"]
+TRANSPARENT_PIXEL = config["transparent_pixel"]
 
-GAME_WINDOW_RESOLUTION = main_config_data["resolutions"]["game_window"]
-MAIN_WINDOW_RESOLUTION = [GAME_WINDOW_RESOLUTION[0] + main_config_data["resolutions"]["main_window"][0],
-                          GAME_WINDOW_RESOLUTION[1] + main_config_data["resolutions"]["main_window"][1]]
+GAME_WINDOW_RESOLUTION = config["main"]["resolutions"]["game_window"]
+MAIN_WINDOW_RESOLUTION = (int(GAME_WINDOW_RESOLUTION[0] * config["main"]["resolutions"]["main_window"][0]),
+                          int(GAME_WINDOW_RESOLUTION[1] * config["main"]["resolutions"]["main_window"][1]))
 
-FRAME_RATE = main_config_data["frame_rate"]
+FRAME_RATE = config["main"]["frame_rate"]
 
-IMG_SRC_FOLDER = main_config_data["imgs"]["img_src_folder"]
+IMG_SRC_FOLDER = config["main"]["img_src_folder"]
 
-CAR_INITIAL_SIZE = main_config_data["imgs"]["car_init_size"]
-CAR_SIZE = main_config_data["imgs"]["car_size"]
-CAR_IMGS = []
-for car_i in range(1, main_config_data["imgs"]["num"]):
-    CAR_IMGS.append(pygame.transform.scale(pygame.image.load(os.path.join(
-        IMG_SRC_FOLDER, main_config_data["imgs"]["file_names"]["car"].format(car_i))),
-        (int(CAR_INITIAL_SIZE[0] * CAR_SIZE), int(CAR_INITIAL_SIZE[1] * CAR_SIZE))))
-
-BG_IMG = pygame.transform.scale2x(pygame.image.load(os.path.join(
-    IMG_SRC_FOLDER, main_config_data["imgs"]["file_names"]["surroundings"])))
-
-MAIN_BG_IMG = pygame.transform.scale(pygame.image.load(os.path.join(IMG_SRC_FOLDER,
-                                                                    main_config_data["imgs"]["file_names"]["main_bg"])),
-                                     GAME_WINDOW_RESOLUTION)
-TRACK = pygame.transform.scale2x(pygame.image.load(os.path.join(IMG_SRC_FOLDER,
-                                                                main_config_data["imgs"]["file_names"]["track"])))
-
-ARROWS = [
-    pygame.transform.scale(pygame.image.load(
-        os.path.join(IMG_SRC_FOLDER, main_config_data["imgs"]["file_names"]["arrow_left"])),
-        main_config_data["imgs"]["arrow_size"]),
-    pygame.transform.scale(pygame.image.load(
-        os.path.join(IMG_SRC_FOLDER, main_config_data["imgs"]["file_names"]["arrow_left_corner"])),
-        main_config_data["imgs"]["arrow_size"]),
-    pygame.transform.scale(pygame.image.load(
-        os.path.join(IMG_SRC_FOLDER, main_config_data["imgs"]["file_names"]["arrow_forward"])),
-        main_config_data["imgs"]["arrow_size"]),
-    pygame.transform.scale(pygame.image.load(
-        os.path.join(IMG_SRC_FOLDER, main_config_data["imgs"]["file_names"]["arrow_right_corner"])),
-        main_config_data["imgs"]["arrow_size"]),
-    pygame.transform.scale(pygame.image.load(
-        os.path.join(IMG_SRC_FOLDER, main_config_data["imgs"]["file_names"]["arrow_right"])),
-        main_config_data["imgs"]["arrow_size"])
+CAR_INITIAL_SIZE = config["car"]["car_init_size"]
+CAR_SIZE = MAIN_WINDOW_RESOLUTION[0] * config["car"]["car_size"]
+CAR_IMGS = [
+    pygame.transform.scale(pygame.image.load(os.path.join(IMG_SRC_FOLDER, config["car"]["img"].format(i + 1))),
+                           (int(CAR_INITIAL_SIZE[0] * CAR_SIZE), int(CAR_INITIAL_SIZE[1] * CAR_SIZE)))
+    for i in range(config["car"]["num_cars_imgs"])
 ]
 
+BG_IMG = pygame.transform.scale(pygame.image.load(os.path.join(IMG_SRC_FOLDER,
+                                                               config["main"]["imgs"]["surroundings"])),
+                                GAME_WINDOW_RESOLUTION)
 
-RADAR_ANGLES = main_config_data["radar"]["angles"]
-RADAR_MAX_LEN = main_config_data["radar"]["max_len"]
-RADAR_BEAM_THICKNESS = main_config_data["radar"]["beam_thickness"]
+MAIN_BG_IMG = pygame.transform.scale(pygame.image.load(os.path.join(IMG_SRC_FOLDER,
+                                                                    config["main"]["imgs"]["main_bg"])),
+                                     GAME_WINDOW_RESOLUTION)
+TRACK = pygame.transform.scale(pygame.image.load(os.path.join(IMG_SRC_FOLDER,
+                                                              config["main"]["imgs"]["track"])),
+                               GAME_WINDOW_RESOLUTION)
 
-BG_POSITION = main_config_data["positions"]["background"]
-TRACK_POSITION = main_config_data["positions"]["track"]
-CAR_POSITION = main_config_data["positions"]["car"]
+ARROW_INITIAL_SIZE = config["radar"]["arrow"]["arrow_init_size"]
+ARROW_SIZE = config["radar"]["arrow"]["arrow_size"] * CAR_SIZE
+ARROW_IMG = pygame.transform.scale(pygame.image.load(os.path.join(IMG_SRC_FOLDER, config["radar"]["arrow"]["img"])),
+                                   (int(ARROW_INITIAL_SIZE[0] * ARROW_SIZE), int(ARROW_INITIAL_SIZE[1] * ARROW_SIZE)))
 
-STAT_FONT = pygame.font.SysFont(main_config_data["font"]["type"], main_config_data["font"]["size"])
-DIST_FONT = pygame.font.SysFont(main_config_data["font"]["type"], main_config_data["font"]["dist_size"])
+RADAR_ANGLES = config["radar"]["angles"]
+RADAR_MAX_LEN = config["radar"]["max_len"]
+RADAR_BEAM_THICKNESS = config["radar"]["beam_thickness"]
+
+BG_POSITION = config["main"]["imgs"]["position"]
+TRACK_POSITION = BG_POSITION
+CAR_POSITION = (int(GAME_WINDOW_RESOLUTION[0] * config["car"]["position"][0]),
+                int(GAME_WINDOW_RESOLUTION[1] * config["car"]["position"][1]))
+
+STAT_FONT = pygame.font.SysFont(config["stats"]["font"]["type"],
+                                int(MAIN_WINDOW_RESOLUTION[0] * config["stats"]["font"]["size"]))
+DIST_FONT = pygame.font.SysFont(config["stats"]["font"]["type"],
+                                int(MAIN_WINDOW_RESOLUTION[0] * config["stats"]["font"]["dist_size"]))
+
+config["stats"]["global"]["position"][1] = int(config["stats"]["global"]["position"][1] * MAIN_WINDOW_RESOLUTION[1])
+config["stats"]["gap"] = int(MAIN_WINDOW_RESOLUTION[0] * config["stats"]["font"]["size"] * config["stats"]["gap"])
+
+config["stats"]["best_car"]["img"]["scale"] = config["stats"]["best_car"]["img"]["scale"] * CAR_SIZE
+config["stats"]["best_car"]["img"]["position"] = \
+    (int(MAIN_WINDOW_RESOLUTION[0] * config["stats"]["best_car"]["img"]["position"][0]),
+     int(MAIN_WINDOW_RESOLUTION[1] * config["stats"]["best_car"]["img"]["position"][1]))
+
 RED_COLOR = (255, 0, 0)
+LIGHT_RED_COLOR = (100, 0, 0)
+GREEN_COLOR = (0, 255, 0)
+LIGHT_GREEN_COLOR = (0, 100, 0)
 
-TEXT_MAP = main_config_data["positions"]["text_map"]
+SHOW_FRAME_TIME = config["main"]["show_times"]
+SHOW_RADAR_LINES = config["main"]["show_radar"]
 
 max_score = 0
 gen_num = 0
+
+
+def timer(func):
+    import time
+
+    def wrapper(*args, **kwargs):
+        start_time = time.time()
+        result = func(*args, **kwargs)
+        print(f"Function: {func.__name__}")
+        print(f"--- {float(time.time() - start_time) * 1000} milliseconds--- \n")
+        return result
+
+    if SHOW_FRAME_TIME:
+        return wrapper
+    return func
 
 
 def save():
@@ -112,24 +131,17 @@ class Car:
         self.rx = x + self.img.get_width() // 2
         self.ry = y + self.img.get_height() // 2
 
-        self.dist_forward = 0
-        self.dist_left_corner = 0
-        self.dist_right_corner = 0
-        self.dist_left = 0
-        self.dist_right = 0
+        self.distances = [0 for i in range(9)]
 
         self.vel = 0
         self.thrust = 0.15
-        self.break_t = 0.15
         self.friction = 0.05
-        self.tilt_speed = 4.5
+        self.tilt_speed = 5
 
         self.angle = 0
 
         self.right_top_x = self.x + self.img.get_width()
         self.right_top_y = self.y
-
-        self.moving = False
 
         self.score = 0
 
@@ -158,10 +170,6 @@ class Car:
         if self.vel < self.MAX_VEL:
             self.vel += self.thrust
 
-    def speed_break(self):
-        if self.vel >= 0 + self.break_t:
-            self.vel -= self.break_t
-
     def turn_right(self):
         if self.vel > 0:
             self.angle -= self.tilt_speed
@@ -174,13 +182,11 @@ class Car:
         cnt = 0
         while cnt < RADAR_MAX_LEN:
             x, y = self.calc_x_y(self.rx, self.ry, cnt, angle)
-            try:
-                pixel = border.img.get_at((x, y))
-            except:
-                if y < 1:
-                    y = 1
-                pixel = border.img.get_at((x, y))
-            if pixel[0] == TRANSPARENT_PIXEL["R"] and pixel[1] == TRANSPARENT_PIXEL["G"]\
+
+            if y < 1:
+                y = 1
+            pixel = border.img.get_at((x, y))
+            if pixel[0] == TRANSPARENT_PIXEL["R"] and pixel[1] == TRANSPARENT_PIXEL["G"] \
                     and pixel[2] == TRANSPARENT_PIXEL["B"] and pixel[3] == TRANSPARENT_PIXEL["A"]:
                 cnt += 1
             else:
@@ -190,29 +196,18 @@ class Car:
     def draw(self, window):
         blit_rotate_center(window, self.img, (self.x, self.y), self.angle)
 
-        x, y = self.calc_x_y(self.rx, self.ry, self.dist_forward, self.angle + RADAR_ANGLES["forward"])
-        pygame.draw.line(window, RED_COLOR, (x, y), (self.rx, self.ry), RADAR_BEAM_THICKNESS)
+        if SHOW_RADAR_LINES:
 
-        x, y = self.calc_x_y(self.rx, self.ry, self.dist_left_corner, self.angle + RADAR_ANGLES["left_corner"])
-        pygame.draw.line(window, RED_COLOR, (x, y), (self.rx, self.ry), RADAR_BEAM_THICKNESS)
-
-        x, y = self.calc_x_y(self.rx, self.ry, self.dist_right_corner, self.angle + RADAR_ANGLES["right_corner"])
-        pygame.draw.line(window, RED_COLOR, (x, y), (self.rx, self.ry), RADAR_BEAM_THICKNESS)
-
-        x, y = self.calc_x_y(self.rx, self.ry, self.dist_left, self.angle + RADAR_ANGLES["left"])
-        pygame.draw.line(window, RED_COLOR, (x, y), (self.rx, self.ry), RADAR_BEAM_THICKNESS)
-
-        x, y = self.calc_x_y(self.rx, self.ry, self.dist_right, self.angle + RADAR_ANGLES["right"])
-        pygame.draw.line(window, RED_COLOR, (x, y), (self.rx, self.ry), RADAR_BEAM_THICKNESS)
+            for i in range(len(self.distances)):
+                pygame.draw.line(window, RED_COLOR,
+                                 self.calc_x_y(self.rx, self.ry, self.distances[i], self.angle + RADAR_ANGLES[i]),
+                                 (self.rx, self.ry), RADAR_BEAM_THICKNESS)
 
     def locate(self, border):
-        self.dist_forward = self.find_distance(border, self.angle + RADAR_ANGLES["forward"])
-        self.dist_left_corner = self.find_distance(border, self.angle + RADAR_ANGLES["left_corner"])
-        self.dist_right_corner = self.find_distance(border, self.angle + RADAR_ANGLES["right_corner"])
-        self.dist_left = self.find_distance(border, self.angle + RADAR_ANGLES["left"])
-        self.dist_right = self.find_distance(border, self.angle + RADAR_ANGLES["right"])
+        for i in range(len(self.distances)):
+            self.distances[i] = self.find_distance(border, self.angle + RADAR_ANGLES[i])
 
-        return self.dist_forward, self.dist_left_corner, self.dist_right_corner, self.dist_left, self.dist_right
+        return self.distances
 
     def get_mask(self):
         return pygame.mask.from_surface(self.img)
@@ -240,11 +235,61 @@ class Border:
         return False
 
 
+class Button:
+    def __init__(self, position, size, text=''):
+        self.x = position[0]
+        self.y = position[1]
+        self.width = size[0]
+        self.height = size[1]
+        self.text = text
+        self.color = None
+        self.restore_color()
+
+    def restore_color(self):
+        if SHOW_RADAR_LINES:
+            self.color = GREEN_COLOR
+        else:
+            self.color = RED_COLOR
+
+    def switch(self):
+        global SHOW_RADAR_LINES
+        SHOW_RADAR_LINES = not SHOW_RADAR_LINES
+
+        self.restore_color()
+
+    def draw(self, win, outline=None):
+        # Call this method to draw the button on the screen
+        if outline:
+            pygame.draw.rect(win, outline, (self.x - 2, self.y - 2, self.width + 4, self.height + 4), 0)
+
+        pygame.draw.rect(win, self.color, (self.x, self.y, self.width, self.height), 0)
+
+        if self.text != '':
+            font = pygame.font.SysFont(config["stats"]["font"]["type"],
+                                       int(config["stats"]["font"]["button"] * MAIN_WINDOW_RESOLUTION[0]))
+            text = font.render(self.text, 1, (0, 0, 0))
+            win.blit(text, (int(self.x + (self.width / 2 - text.get_width() / 2)),
+                            int(self.y + (self.height / 2 - text.get_height() / 2))))
+
+    def is_over(self, pos):
+        if self.color == RED_COLOR:
+            self.color = (100, 0, 0)
+        elif self.color == GREEN_COLOR:
+            self.color = (0, 100, 0)
+
+        # Pos is the mouse position or a tuple of (x,y) coordinates
+        if self.x < pos[0] < self.x + self.width:
+            if self.y < pos[1] < self.y + self.height:
+                return True
+
+        return False
+
+
 def get_best_car(cars):
     best_car_data = {"score": -1000,
                      "img": CAR_IMGS[0],
                      "speed": 0,
-                     "distances": [0, 0, 0, 0, 0],
+                     "distances": [0 for i in range(len(config["radar"]["angles"]))],
                      "max_speed": 0
                      }
     for car in cars:
@@ -252,14 +297,7 @@ def get_best_car(cars):
             best_car_data = {"score": car.score,
                              "img": car.img,
                              "speed": car.vel,
-                             "distances":
-                                 [
-                                     car.dist_left,
-                                     car.dist_left_corner,
-                                     car.dist_forward,
-                                     car.dist_right_corner,
-                                     car.dist_right
-                                 ],
+                             "distances": car.distances,
                              "max_speed": car.MAX_VEL
                              }
     return best_car_data
@@ -270,11 +308,35 @@ def font_render(window, font, data, color, position):
     window.blit(text, position)
 
 
-def draw(main_window, game_window, border, cars, num_alive):
+def draw_in_circle(window, objects, center, radius):
+    positions = [
+        center[0] - radius,
+        center[0] - radius / 4 * 3.6,
+        center[0] - radius / 4 * 2.7,
+        center[0] - radius / 4 * 1.4,
+        center[0],
+        center[0] + radius / 4 * 1.4,
+        center[0] + radius / 4 * 2.7,
+        center[0] + radius / 4 * 3.6,
+        center[0] + radius
+    ]
+    for i, x in enumerate(positions):
+        pos = (round(x),
+               MAIN_WINDOW_RESOLUTION[1] - round(center[1] + math.sqrt(radius ** 2 - (x - center[0]) ** 2)))
+
+        blit_rotate_center(window, objects[i], pos, config["radar"]["angles"][i])
+
+
+def draw(main_window, game_window, clock, border, cars, num_alive, draw_lines_switch):
     main_window.blit(MAIN_BG_IMG, (0, 0))
     main_window.blit(game_window, (MAIN_WINDOW_RESOLUTION[0] - GAME_WINDOW_RESOLUTION[0], 0))
     game_window.blit(TRACK, TRACK_POSITION)
     border.draw(game_window)
+    draw_lines_switch.draw(main_window)
+
+    font_render(main_window, STAT_FONT, f"fps: {int(clock.get_fps())}", RED_COLOR,
+                position=(int(MAIN_WINDOW_RESOLUTION[0] * config["stats"]["fps_counter"]["position"][0]),
+                          int(MAIN_WINDOW_RESOLUTION[1] * config["stats"]["fps_counter"]["position"][1])))
 
     for i, car in enumerate(cars):
         car.draw(game_window)
@@ -289,25 +351,32 @@ def draw(main_window, game_window, border, cars, num_alive):
         "Distances:"
     ]
     for i, text in enumerate(best_car_sector):
-        pos = (TEXT_MAP["best_car_sector"][0], TEXT_MAP["best_car_sector"][1] + i * TEXT_MAP["gap"])
+        pos = (config["stats"]["best_car"]["position"][0],
+               config["stats"]["best_car"]["position"][1] + i * config["stats"]["gap"])
         font_render(main_window, STAT_FONT, text, RED_COLOR, pos)
 
-    best_car_data['img'] = pygame.transform.scale(best_car_data['img'],
-                                                  (int(CAR_INITIAL_SIZE[0] * TEXT_MAP["best_car_img_scale"]),
-                                                   int(CAR_INITIAL_SIZE[1] * TEXT_MAP["best_car_img_scale"])))
-    pos = (TEXT_MAP["best_car_sector"][0] + 90,
-           TEXT_MAP["best_car_sector"][1] + 2 * TEXT_MAP["gap"] - best_car_data['img'].get_height() // 2 + 15)
+    best_car_data['img'] = \
+        pygame.transform.scale(best_car_data['img'],
+                               (int(CAR_INITIAL_SIZE[0] * config["stats"]["best_car"]["img"]["scale"]),
+                                int(CAR_INITIAL_SIZE[1] * config["stats"]["best_car"]["img"]["scale"])))
+
+    pos = (config["stats"]["best_car"]["img"]["position"][0],
+           config["stats"]["best_car"]["img"]["position"][1] - best_car_data['img'].get_height() // 2)
     main_window.blit(best_car_data['img'], pos)
 
-    for i, arrow in enumerate(ARROWS):
-        pos = (TEXT_MAP["arrows"]["imgs"]["init"][0] + i * TEXT_MAP["arrows"]["imgs"]["gap"],
-               TEXT_MAP["arrows"]["imgs"]["init"][1])
-        main_window.blit(arrow, pos)
+    radius = MAIN_WINDOW_RESOLUTION[0] * config["radar"]["arrow"]["positions"]["imgs"]["radius"]
+    draw_in_circle(main_window,
+                   objects=[ARROW_IMG for i in range(9)],
+                   center=(config["radar"]["arrow"]["positions"]["imgs"]["init"][0] * MAIN_WINDOW_RESOLUTION[0],
+                           config["radar"]["arrow"]["positions"]["imgs"]["init"][1] * MAIN_WINDOW_RESOLUTION[1]),
+                   radius=radius)
 
-    for i, dist in enumerate(best_car_data["distances"]):
-        pos = (TEXT_MAP["arrows"]["text"]["init"][0] + i * TEXT_MAP["arrows"]["imgs"]["gap"],
-               TEXT_MAP["arrows"]["text"]["init"][1])
-        font_render(main_window, DIST_FONT, str(dist), RED_COLOR, pos)
+    draw_in_circle(main_window,
+                   objects=[DIST_FONT.render(str(best_car_data["distances"][i]), 1, RED_COLOR)
+                            for i in range(len(best_car_data["distances"]))],
+                   center=(config["radar"]["arrow"]["positions"]["text"]["init"][0] * MAIN_WINDOW_RESOLUTION[0],
+                           config["radar"]["arrow"]["positions"]["text"]["init"][1] * MAIN_WINDOW_RESOLUTION[1]),
+                   radius=radius * config["radar"]["arrow"]["positions"]["text"]["radius"])
 
     global_stats_sector = [
         "_____Global stats_____",
@@ -316,7 +385,8 @@ def draw(main_window, game_window, border, cars, num_alive):
         f"Generation: {gen_num}"
     ]
     for i, text in enumerate(global_stats_sector):
-        pos = (TEXT_MAP["global_stats_sector"][0], TEXT_MAP["global_stats_sector"][1] + i * TEXT_MAP["gap"])
+        pos = (config["stats"]["global"]["position"][0],
+               config["stats"]["global"]["position"][1] + i * config["stats"]["gap"])
         font_render(main_window, STAT_FONT, text, RED_COLOR, pos)
 
 
@@ -341,19 +411,26 @@ def process_car(car, cars, gens, nets, border, i, counter):
         cars.pop(i)
         nets.pop(i)
         gens.pop(i)
-    if counter > 200:
-        if car.vel <= 2:
+    if counter > 150:
+        if car.vel <= 1:
             gens[i].fitness -= 1
             cars.pop(i)
             nets.pop(i)
             gens.pop(i)
-    if car.score >= 30000:
+    if car.score >= 50000:
         cars.pop(i)
         nets.pop(i)
         gens.pop(i)
 
 
-def main(genomes, config):
+@timer
+def process_all_cars(cars, gens, nets, border, counter):
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        for i, car in enumerate(cars):
+            executor.submit(process_car, car, cars, gens, nets, border, i, counter)
+
+
+def main(genomes, neat_config):
     global gen_num
 
     counter = 0
@@ -366,16 +443,23 @@ def main(genomes, config):
 
     # get the genomes
     for _, g in genomes:
-        net = neat.nn.FeedForwardNetwork.create(g, config)
+        net = neat.nn.FeedForwardNetwork.create(g, neat_config)
         nets.append(net)
         car = Car(CAR_POSITION[0], CAR_POSITION[1])
         cars.append(car)
         g.fitness = 0
         gens.append(g)
 
+    draw_lines_switch = Button(position=(int(config["radar"]["button"]["position"][0] * MAIN_WINDOW_RESOLUTION[0]),
+                                         config["radar"]["button"]["position"][1]),
+                               size=(int(config["radar"]["button"]["size"][0] * MAIN_WINDOW_RESOLUTION[0]),
+                                     int(config["radar"]["button"]["size"][1] * MAIN_WINDOW_RESOLUTION[1])),
+                               text="drw lns")
+
     game_window = pygame.Surface(GAME_WINDOW_RESOLUTION)
     main_window = pygame.display.set_mode(MAIN_WINDOW_RESOLUTION)
     clock = pygame.time.Clock()
+    pygame.display.set_caption("AI learning to ride")
 
     while True:
         clock.tick(FRAME_RATE)
@@ -384,29 +468,30 @@ def main(genomes, config):
         num_alive = len(cars)
 
         for event in pygame.event.get():
+            mouse_pos = pygame.mouse.get_pos()
             if event.type == pygame.QUIT:
                 save()
                 pygame.quit()
                 exit()
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    for i, car in enumerate(cars):
+                        gens[i].fitness -= 1
+                        cars.pop(i)
+                        nets.pop(i)
+                        gens.pop(i)
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if draw_lines_switch.is_over(mouse_pos):
+                    draw_lines_switch.switch()
+            if not draw_lines_switch.is_over(mouse_pos):
+                draw_lines_switch.restore_color()
 
         if len(cars) == 0:
             break
 
-        import time
-        start_time = time.time()
+        process_all_cars(cars, gens, nets, border, counter)
 
-        with concurrent.futures.ThreadPoolExecutor() as executor:
-            for i, car in enumerate(cars):
-                executor.submit(process_car, car, cars, gens, nets, border, i, counter)
-
-        # old way
-        #
-        # for i, car in enumerate(cars):
-        #     process_car(car, cars, gens, nets, border, i, counter)
-
-        print(f"--- {float(time.time() - start_time) * 1000} milliseconds---")
-
-        draw(main_window, game_window, border, cars, num_alive)
+        draw(main_window, game_window, clock, border, cars, num_alive, draw_lines_switch)
         pygame.display.update()
     gen_num += 1
 
@@ -417,17 +502,18 @@ def run(config_file_path):
     :param config_file_path: path to a config file
     :return: None
     """
-    config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
-                                neat.DefaultSpeciesSet, neat.DefaultStagnation,
-                                config_file_path)
+    neat_config = neat.config.Config(neat.DefaultGenome, neat.DefaultReproduction,
+                                     neat.DefaultSpeciesSet, neat.DefaultStagnation,
+                                     config_file_path)
 
-    population = neat.Population(config)
+    population = neat.Population(neat_config)
     population.add_reporter(neat.StdOutReporter(True))
     statistics = neat.StatisticsReporter()
     population.add_reporter(statistics)
 
     try:
         winner = population.run(main, 100)
+        print(winner)
     except pygame.error as e:
         pass
     save()

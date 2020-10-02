@@ -39,3 +39,135 @@ Date: Tue Sep 29 20:54:52 2020
 Generations: 2
 Max score: 15029
 
+Date: Fri Oct  2 12:40:47 2020 
+Generations: 0
+Max score: 601
+
+Date: Fri Oct  2 13:08:47 2020 
+Generations: 0
+Max score: 18
+
+Date: Fri Oct  2 13:15:40 2020 
+Generations: 0
+Max score: 54
+
+Date: Fri Oct  2 14:31:18 2020 
+Generations: 0
+Max score: 26
+
+Date: Fri Oct  2 14:39:24 2020 
+Generations: 12
+Max score: 2228
+
+Date: Fri Oct  2 14:42:05 2020 
+Generations: 0
+Max score: 612
+
+Date: Fri Oct  2 14:47:01 2020 
+Generations: 0
+Max score: 465
+
+Date: Fri Oct  2 14:58:57 2020 
+Generations: 20
+Max score: 543
+
+Date: Fri Oct  2 15:20:57 2020 
+Generations: 63
+Max score: 813
+
+Date: Fri Oct  2 15:33:20 2020 
+Generations: 6
+Max score: 393
+
+Date: Fri Oct  2 15:38:08 2020 
+Generations: 25
+Max score: 405
+
+Date: Fri Oct  2 15:43:52 2020 
+Generations: 3
+Max score: 389
+
+Date: Fri Oct  2 15:48:49 2020 
+Generations: 5
+Max score: 16794
+
+Date: Fri Oct  2 16:36:50 2020 
+Generations: 6
+Max score: 30002
+
+Date: Fri Oct  2 17:01:51 2020 
+Generations: 9
+Max score: 30000
+
+Date: Fri Oct  2 17:21:37 2020 
+Generations: 0
+Max score: 65
+
+Date: Fri Oct  2 17:25:04 2020 
+Generations: 4
+Max score: 14414
+
+Date: Fri Oct  2 17:31:36 2020 
+Generations: 9
+Max score: 3000
+
+Date: Fri Oct  2 17:38:09 2020 
+Generations: 8
+Max score: 21932
+
+Date: Fri Oct  2 17:47:03 2020 
+Generations: 11
+Max score: 10763
+
+Date: Fri Oct  2 18:23:50 2020 
+Generations: 12
+Max score: 2041
+
+Date: Fri Oct  2 18:48:07 2020 
+Generations: 11
+Max score: 50002
+
+Date: Fri Oct  2 19:19:21 2020 
+Generations: 0
+Max score: 478
+
+Date: Fri Oct  2 19:43:02 2020 
+Generations: 0
+Max score: 0
+
+Date: Fri Oct  2 19:46:55 2020 
+Generations: 0
+Max score: 2
+
+Date: Fri Oct  2 20:13:42 2020 
+Generations: 0
+Max score: 0
+
+Date: Fri Oct  2 20:45:49 2020 
+Generations: 1
+Max score: 529
+
+Date: Fri Oct  2 21:10:31 2020 
+Generations: 0
+Max score: 3
+
+Date: Fri Oct  2 21:25:35 2020 
+Generations: 0
+Max score: 4
+
+Date: Fri Oct  2 21:42:17 2020 
+Generations: 0
+Max score: 6
+
+Date: Fri Oct  2 21:53:29 2020 
+Generations: 8
+Max score: 9440
+
+Date: Fri Oct  2 21:57:53 2020 
+Generations: 0
+Max score: 5
+
+Date: Fri Oct  2 22:12:16 2020 
+Generations: 18
+Max score: 10952
+
