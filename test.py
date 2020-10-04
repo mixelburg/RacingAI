@@ -1,5 +1,6 @@
 import datetime
 import math
+import sys
 from copy import copy
 
 import neat
@@ -665,9 +666,8 @@ def main(genomes, neat_config):
             mouse_pos = pygame.mouse.get_pos()
             # if the window is closed
             if event.type == pygame.QUIT:
-                save()
                 pygame.quit()
-                exit()
+                sys.exit()
             # process key presses
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_UP:
@@ -704,6 +704,7 @@ def run(config_file_path):
     global pop_size
     pop_size = neat_config.pop_size
 
+    # create population and add a reporter (logger)
     population = neat.Population(neat_config)
     population.add_reporter(neat.StdOutReporter(True))
     statistics = neat.StatisticsReporter()
@@ -711,12 +712,13 @@ def run(config_file_path):
 
     try:
         winner = population.run(main, 100)
-        print(winner)
     except pygame.error as e:
         print(e.__context__)
         print(e.__traceback__)
-        pass
-    save()
+    else:
+        print(winner)
+    finally:
+        save()
 
 
 if __name__ == '__main__':

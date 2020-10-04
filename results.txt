@@ -1,173 +1,176 @@
-Date: Tue Sep 29 02:41:19 2020 
-Generations: 8
-Max score: 48626
-
-terminated 
-Date: Tue Sep 29 02:50:51 2020 
-Generations: 1
-Max score: 5
-
-Date: Tue Sep 29 03:45:48 2020 
-Generations: 9
-Max score: 30001
-
-Date: Tue Sep 29 03:52:43 2020 
-Generations: 11
-Max score: 1380
-
-Date: Tue Sep 29 04:00:01 2020 
-Generations: 7
-Max score: 14055
-
-Date: Tue Sep 29 04:01:10 2020 
+Date: Fri Oct  2 23:50:40 2020
 Generations: 0
-Max score: 10
-
-Date: Tue Sep 29 04:08:18 2020 
-Generations: 5
-Max score: 30001
-
-Date: Tue Sep 29 12:14:54 2020 
-Generations: 3
-Max score: 741
-
-Date: Tue Sep 29 12:51:17 2020 
-Generations: 1
-Max score: 4185
-
-Date: Tue Sep 29 20:54:52 2020 
-Generations: 2
-Max score: 15029
-
-Date: Fri Oct  2 12:40:47 2020 
-Generations: 0
-Max score: 601
-
-Date: Fri Oct  2 13:08:47 2020 
-Generations: 0
-Max score: 18
-
-Date: Fri Oct  2 13:15:40 2020 
-Generations: 0
-Max score: 54
-
-Date: Fri Oct  2 14:31:18 2020 
-Generations: 0
-Max score: 26
-
-Date: Fri Oct  2 14:39:24 2020 
-Generations: 12
-Max score: 2228
-
-Date: Fri Oct  2 14:42:05 2020 
-Generations: 0
-Max score: 612
-
-Date: Fri Oct  2 14:47:01 2020 
-Generations: 0
-Max score: 465
-
-Date: Fri Oct  2 14:58:57 2020 
-Generations: 20
-Max score: 543
-
-Date: Fri Oct  2 15:20:57 2020 
-Generations: 63
-Max score: 813
-
-Date: Fri Oct  2 15:33:20 2020 
-Generations: 6
-Max score: 393
-
-Date: Fri Oct  2 15:38:08 2020 
-Generations: 25
-Max score: 405
-
-Date: Fri Oct  2 15:43:52 2020 
-Generations: 3
-Max score: 389
-
-Date: Fri Oct  2 15:48:49 2020 
-Generations: 5
-Max score: 16794
-
-Date: Fri Oct  2 16:36:50 2020 
-Generations: 6
-Max score: 30002
-
-Date: Fri Oct  2 17:01:51 2020 
-Generations: 9
-Max score: 30000
-
-Date: Fri Oct  2 17:21:37 2020 
-Generations: 0
-Max score: 65
-
-Date: Fri Oct  2 17:25:04 2020 
-Generations: 4
-Max score: 14414
-
-Date: Fri Oct  2 17:31:36 2020 
-Generations: 9
-Max score: 3000
-
-Date: Fri Oct  2 17:38:09 2020 
-Generations: 8
-Max score: 21932
-
-Date: Fri Oct  2 17:47:03 2020 
-Generations: 11
-Max score: 10763
-
-Date: Fri Oct  2 18:23:50 2020 
-Generations: 12
-Max score: 2041
-
-Date: Fri Oct  2 18:48:07 2020 
-Generations: 11
-Max score: 50002
-
-Date: Fri Oct  2 19:19:21 2020 
-Generations: 0
-Max score: 478
-
-Date: Fri Oct  2 19:43:02 2020 
-Generations: 0
-Max score: 0
-
-Date: Fri Oct  2 19:46:55 2020 
-Generations: 0
+Pop size: 100
 Max score: 2
 
-Date: Fri Oct  2 20:13:42 2020 
+Date: Fri Oct  2 23:53:34 2020
 Generations: 0
+Pop size: 100
 Max score: 0
 
-Date: Fri Oct  2 20:45:49 2020 
-Generations: 1
-Max score: 529
+Date: Sat Oct  3 00:01:30 2020
+Generations: 12
+Pop size: 100
+Max score: 14463
 
-Date: Fri Oct  2 21:10:31 2020 
+Date: Sat Oct  3 00:10:12 2020
+Generations: 12
+Pop size: 100
+Max score: 12459
+
+Date: Sun Oct  4 13:11:35 2020
 Generations: 0
-Max score: 3
+Pop size: 100
+Max score: 45
 
-Date: Fri Oct  2 21:25:35 2020 
+Date: Sun Oct  4 13:54:50 2020
 Generations: 0
-Max score: 4
+Pop size: 100
+Max score: 0
 
-Date: Fri Oct  2 21:42:17 2020 
-Generations: 0
-Max score: 6
+Date: Sun Oct  4 14:37:16 2020
+Generations: 28
+Pop size: 100
+Max score: 657
 
-Date: Fri Oct  2 21:53:29 2020 
-Generations: 8
-Max score: 9440
+Date: Sun Oct  4 14:42:28 2020 
+Generations: 11
+Max score: 10140
 
-Date: Fri Oct  2 21:57:53 2020 
-Generations: 0
-Max score: 5
+Date: Sun Oct  4 14:49:13 2020
+Generations: 14
+Pop size: 100
+Max score: 621
 
-Date: Fri Oct  2 22:12:16 2020 
+Date: Sun Oct  4 14:55:28 2020 
+Generations: 11
+Max score: 15352
+
+Date: Sun Oct  4 15:00:42 2020 
+Generations: 10
+Max score: 5509
+
+Date: Sun Oct  4 15:08:29 2020 
 Generations: 18
-Max score: 10952
+Max score: 8777
+
+Date: Sun Oct  4 15:13:17 2020
+Generations: 0
+Pop size: 0
+Max score: 16
+
+Date: Sun Oct  4 15:16:49 2020
+Generations: 5
+Pop size: 0
+Max score: 7784
+
+Date: Sun Oct  4 15:19:45 2020
+Generations: 0
+Pop size: 0
+Max score: 413
+
+Date: Sun Oct  4 15:27:28 2020
+Generations: 14
+Pop size: 0
+Max score: 738
+
+Date: Sun Oct  4 15:32:54 2020
+Generations: 11
+Pop size: 0
+Max score: 648
+
+Date: Sun Oct  4 15:36:27 2020
+Generations: 9
+Pop size: 0
+Max score: 665
+
+Date: Sun Oct  4 15:47:17 2020
+Generations: 10
+Pop size: 100
+Max score: 12958
+
+Date: Sun Oct  4 15:52:32 2020
+Generations: 3
+Pop size: 100
+Max score: 9248
+
+Date: Sun Oct  4 15:58:58 2020
+Generations: 10
+Pop size: 100
+Max score: 11718
+
+Date: Sun Oct  4 16:05:15 2020
+Generations: 14
+Pop size: 100
+Max score: 6522
+
+Date: Sun Oct  4 16:09:12 2020
+Generations: 6
+Pop size: 100
+Max score: 11558
+
+Date: Sun Oct  4 16:15:27 2020
+Generations: 10
+Pop size: 100
+Max score: 12653
+
+Date: Sun Oct  4 16:22:17 2020
+Generations: 15
+Pop size: 100
+Max score: 504
+
+Date: Sun Oct  4 16:29:20 2020
+Generations: 13
+Pop size: 100
+Max score: 3952
+
+Date: Sun Oct  4 16:38:12 2020
+Generations: 15
+Pop size: 100
+Max score: 5809
+
+Date: Sun Oct  4 16:49:10 2020
+Generations: 14
+Pop size: 100
+Max score: 40496
+
+Date: Sun Oct  4 16:51:27 2020
+Generations: 0
+Pop size: 100
+Max score: 18
+
+Date: Sun Oct  4 17:20:00 2020
+Generations: 12
+Pop size: 100
+Max score: 19850
+
+Date: Sun Oct  4 17:24:41 2020
+Generations: 0
+Pop size: 100
+Max score: 89
+
+Date: Sun Oct  4 17:25:18 2020
+Generations: 0
+Pop size: 100
+Max score: 0
+
+Date: Sun Oct  4 17:26:19 2020
+Generations: 0
+Pop size: 100
+Max score: 0
+
+Date: Sun Oct  4 17:26:53 2020
+Generations: 0
+Pop size: 100
+Max score: 0
+
+Date: Sun Oct  4 17:33:05 2020
+Generations: 0
+Pop size: 100
+Max score: 0
+
+Date: Sun Oct  4 17:42:49 2020
+Generations: 9
+Pop size: 100
+Max score: 50001
 
