@@ -174,3 +174,63 @@ Generations: 9
 Pop size: 100
 Max score: 50001
 
+Date: Sun Oct  4 20:02:29 2020
+Generations: 4
+Pop size: 100
+Max score: 11535
+
+Date: Sun Oct  4 20:39:03 2020
+Generations: 8
+Pop size: 100
+Max score: 11147
+
+Date: Mon Oct  5 13:00:53 2020
+Generations: 13
+Pop size: 100
+Max score: 8587
+
+Date: Mon Oct  5 13:10:17 2020
+Generations: 10
+Pop size: 100
+Max score: 11792
+
+Date: Mon Oct  5 13:27:14 2020
+Generations: 10
+Pop size: 100
+Max score: 10135
+
+Date: Mon Oct  5 13:31:26 2020
+Generations: 0
+Pop size: 100
+Max score: 0
+
+Date: Mon Oct  5 13:31:50 2020
+Generations: 0
+Pop size: 100
+Max score: 0
+
+Date: Mon Oct  5 13:32:20 2020
+Generations: 0
+Pop size: 100
+Max score: 0
+
+Date: Mon Oct  5 14:07:04 2020
+Generations: 0
+Pop size: 10
+Max score: 18
+
+Date: Mon Oct  5 14:27:25 2020
+Generations: 12
+Pop size: 200
+Max score: 8774
+
+Date: Mon Oct  5 15:03:25 2020
+Generations: 10
+Pop size: 200
+Max score: 9499
+
+Date: Mon Oct  5 15:30:29 2020
+Generations: 15
+Pop size: 200
+Max score: 38099
+

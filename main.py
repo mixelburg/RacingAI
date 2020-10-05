@@ -1,3 +1,5 @@
+#  Copyright (c) 2020. Ivan Krokha (Mixelburg)
+
 import datetime
 import math
 from copy import copy
@@ -27,11 +29,11 @@ FRAME_RATE = config["main"]["frame_rate"]
 IMG_SRC_FOLDER = config["main"]["img_src_folder"]
 
 # get the images
-CAR_INITIAL_SIZE = config["car"]["car_init_size"]
 CAR_SIZE = MAIN_WINDOW_RESOLUTION[0] * config["car"]["car_size"]
 CAR_IMGS = [
-    pygame.transform.scale(pygame.image.load(os.path.join(IMG_SRC_FOLDER, config["car"]["img"].format(i + 1))),
-                           [int(CAR_INITIAL_SIZE[i] * CAR_SIZE) for i in range(2)])
+    pygame.transform.scale(CAR_IMG := pygame.image.load(os.path.join(IMG_SRC_FOLDER,
+                                                                     config["car"]["img"].format(i + 1))),
+                           (int(CAR_IMG.get_width() * CAR_SIZE), int(CAR_IMG.get_height() * CAR_SIZE)))
     for i in range(config["car"]["num_cars_imgs"])
 ]
 
@@ -46,21 +48,25 @@ TRACK = pygame.transform.scale(pygame.image.load(os.path.join(IMG_SRC_FOLDER,
                                                               config["main"]["imgs"]["track"])),
                                GAME_WINDOW_RESOLUTION)
 
-ARROW_INITIAL_SIZE = config["radar"]["arrow"]["arrow_init_size"]
 ARROW_SIZE = config["radar"]["arrow"]["arrow_size"] * CAR_SIZE
-ARROW_IMG = pygame.transform.scale(pygame.image.load(os.path.join(IMG_SRC_FOLDER, config["radar"]["arrow"]["img"])),
-                                   [int(ARROW_INITIAL_SIZE[i] * ARROW_SIZE) for i in range(2)])
+ARROW_IMG = pygame.transform.scale(ARROW_IMG := pygame.image.load(os.path.join(IMG_SRC_FOLDER,
+                                                                               config["radar"]["arrow"]["img"])),
+                                   (int(ARROW_IMG.get_width() * ARROW_SIZE), int(ARROW_IMG.get_height() * ARROW_SIZE)))
+
+GAUGE_SIZE = config["car"]["speedometer"]["size"] * CAR_SIZE
+GAUGE_IMG = pygame.transform.scale(GAUGE_IMG := pygame.image.load(os.path.join(IMG_SRC_FOLDER,
+                                                                               config["car"]["speedometer"]["img"])),
+                                   (int(GAUGE_IMG.get_width() * GAUGE_SIZE), int(GAUGE_IMG.get_height() * GAUGE_SIZE)))
+
 
 # set radar params
 RADAR_ANGLES = config["radar"]["angles"]
 RADAR_MAX_LEN = config["radar"]["max_len"]
-RADAR_BEAM_THICKNESS = config["radar"]["beam_thickness"]
 
 # set image positions
 BG_POSITION = config["main"]["imgs"]["position"]
 TRACK_POSITION = BG_POSITION
 CAR_POSITION = [int(val * cf) for val, cf in zip(GAME_WINDOW_RESOLUTION, config["car"]["position"])]
-
 
 # set fonts
 STAT_FONT = pygame.font.SysFont(config["stats"]["font"]["type"],
@@ -76,6 +82,10 @@ config["stats"]["best_car"]["img"]["scale"] = config["stats"]["best_car"]["img"]
 config["stats"]["best_car"]["img"]["position"] = \
     [int(val * cf) for val, cf in zip(MAIN_WINDOW_RESOLUTION, config["stats"]["best_car"]["img"]["position"])]
 
+config["car"]["speedometer"]["position"] = \
+    [int(val * cf) for val, cf in zip(MAIN_WINDOW_RESOLUTION, config["car"]["speedometer"]["position"])]
+config["car"]["speedometer"]["center"] = \
+    [int(val * cf) for val, cf in zip(MAIN_WINDOW_RESOLUTION, config["car"]["speedometer"]["center"])]
 
 # set some colors
 BLACK_COLOR = pygame.Color("#000000")
@@ -99,6 +109,7 @@ def timer(on=True):
     :param on: display time or not
     :return: wrapped function
     """
+
     def inner_timer(original_function):
         import time
 
@@ -113,6 +124,7 @@ def timer(on=True):
             print("executing")
             return wrapper
         return original_function
+
     return inner_timer
 
 
@@ -144,12 +156,26 @@ def blit_rotate_center(surface, image, topleft, angle):
     surface.blit(rotated_image, new_rect.topleft)
 
 
+def calc_x_y(x, y, dist, angle):
+    """
+    Calculates new (x, y) using given (x, y) ; distance ; angle
+    :param x: initial x coordinate
+    :param y: initial y coordinate
+    :param dist: distance
+    :param angle: angle
+    :return: new (x, y)
+    """
+    x = int(x + math.cos(math.radians(angle)) * dist)
+    y = int(y - math.sin(math.radians(angle)) * dist)
+    return x, y
+
+
 class Car:
     """
     Represents single car
     """
     IMGS = CAR_IMGS
-    MAX_VEL = 5
+    MAX_VEL = config["car"]["max_speed"]
 
     def __init__(self, x, y):
         self.img = choice(self.IMGS)
@@ -164,25 +190,12 @@ class Car:
         self.distances = [0 for i in range(9)]
 
         self.vel = 0
-        self.thrust = 0.15
-        self.friction = 0.05
+        self.thrust = config["car"]["thrust"]
+        self.friction = config["car"]["friction"]
         self.tilt_speed = 5
         self.angle = 0
 
         self.score = 0
-
-    def calc_x_y(self, x, y, dist, angle):
-        """
-        Calculates new (x, y) using given (x, y) ; distance ; angle
-        :param x: initial x coordinate
-        :param y: initial y coordinate
-        :param dist: distance
-        :param angle: angle
-        :return: new (x, y)
-        """
-        x = int(x + math.cos(math.radians(angle)) * dist)
-        y = int(y - math.sin(math.radians(angle)) * dist)
-        return x, y
 
     def move(self):
         """
@@ -198,7 +211,7 @@ class Car:
             max_score = self.score
 
         # calculate new car (x, y) and radar (x, y)
-        self.x, self.y = self.calc_x_y(self.x, self.y, self.vel, self.angle)
+        self.x, self.y = calc_x_y(self.x, self.y, self.vel, self.angle)
         self.rx, self.ry = self.x + self.img.get_width() // 2, self.y + self.img.get_height() // 2
 
     def slow_down(self):
@@ -238,7 +251,33 @@ class Car:
         if self.vel > 0:
             self.angle += self.tilt_speed
 
-    def find_distance(self, border, angle):
+    # def find_distance(self, border, angle):
+    #     """
+    #     Finds distance from car to border at given angle.
+    #         It does it by calculating (x, y) coordinates at given angle and different distances from 0 and till
+    #         the pixel at new coordinates wont be transparent (r: 255, g: 255, b: 255, a: 0)
+    #     :param border: border object
+    #     :param angle: radar angle
+    #     :return: distance to the border
+    #     """
+    #     # initial distance
+    #     cnt = 0
+    #     while cnt < RADAR_MAX_LEN:
+    #         x, y = self.calc_x_y(self.rx, self.ry, cnt, angle)
+    #
+    #         if y < 1:
+    #             y = 1
+    #         # get new pixel value
+    #         pixel = border.img.get_at((x, y))
+    #         # check, if pixel is transparent
+    #         if pixel[0] == TRANSPARENT_PIXEL["R"] and pixel[1] == TRANSPARENT_PIXEL["G"] \
+    #                 and pixel[2] == TRANSPARENT_PIXEL["B"] and pixel[3] == TRANSPARENT_PIXEL["A"]:
+    #             cnt += 1
+    #         else:
+    #             break
+    #     return cnt
+
+    def find_distance(self, border, angle, cnt=0):
         """
         Finds distance from car to border at given angle.
             It does it by calculating (x, y) coordinates at given angle and different distances from 0 and till
@@ -247,21 +286,16 @@ class Car:
         :param angle: radar angle
         :return: distance to the border
         """
-        # initial distance
-        cnt = 0
-        while cnt < RADAR_MAX_LEN:
-            x, y = self.calc_x_y(self.rx, self.ry, cnt, angle)
+        x, y = calc_x_y(self.rx, self.ry, cnt, angle)
+        if y < 1:
+            y = 1
 
-            if y < 1:
-                y = 1
-            # get new pixel value
-            pixel = border.img.get_at((x, y))
-            # check, if pixel is transparent
-            if pixel[0] == TRANSPARENT_PIXEL["R"] and pixel[1] == TRANSPARENT_PIXEL["G"] \
-                    and pixel[2] == TRANSPARENT_PIXEL["B"] and pixel[3] == TRANSPARENT_PIXEL["A"]:
-                cnt += 1
-            else:
-                break
+        pixel = border.img.get_at((x, y))
+        # check, if pixel is transparent
+        if pixel[0] == TRANSPARENT_PIXEL["R"] and pixel[1] == TRANSPARENT_PIXEL["G"] \
+                and pixel[2] == TRANSPARENT_PIXEL["B"] and pixel[3] == TRANSPARENT_PIXEL["A"]:
+            if cnt < RADAR_MAX_LEN:
+                return self.find_distance(border, angle, cnt=cnt + 1)
         return cnt
 
     def draw(self, window):
@@ -276,9 +310,9 @@ class Car:
         # draw radar lines
         if SHOW_RADAR_LINES:
             for i in range(len(self.distances)):
-                pygame.draw.line(window, RED_COLOR,
-                                 self.calc_x_y(self.rx, self.ry, self.distances[i], self.angle + RADAR_ANGLES[i]),
-                                 (self.rx, self.ry), RADAR_BEAM_THICKNESS)
+                pygame.draw.aaline(window, RED_COLOR,
+                                   calc_x_y(self.rx, self.ry, self.distances[i], self.angle + RADAR_ANGLES[i]),
+                                   (self.rx, self.ry), 100)
 
     def locate(self, border):
         """
@@ -304,6 +338,7 @@ class Border:
     """
     Represents track border
     """
+
     def __init__(self, x, y):
         self.x = x
         self.y = y
@@ -345,6 +380,7 @@ class Button:
     """
     Represents simple button
     """
+
     def __init__(self, position, size, text=''):
         self.x = position[0]
         self.y = position[1]
@@ -469,9 +505,29 @@ def draw_in_circle(window, objects, center, radius):
     ]
     for i, x in enumerate(positions):
         pos = (round(x),
-               MAIN_WINDOW_RESOLUTION[1] - round(center[1] + math.sqrt(radius ** 2 - (x - center[0]) ** 2)))
+               round(MAIN_WINDOW_RESOLUTION[1] - center[1] - math.sqrt(abs(radius ** 2 - (x - center[0]) ** 2))))
 
         blit_rotate_center(window, objects[i], pos, config["radar"]["angles"][i])
+
+
+def draw_speedometer(window, car):
+    """
+    Draws (blits) speedometer picture on the given surface (window)
+    :param window: pygame.Surface object
+    :param car: Car object (its speed will be displayed)
+    :return: None
+    """
+    window.blit(GAUGE_IMG, config["car"]["speedometer"]["position"])
+
+    speed_p = car.vel / car.MAX_VEL
+    angle = 180 - speed_p * 180
+    length = GAUGE_IMG.get_width() * config["car"]["speedometer"]["needle_length"]
+    thickness = round(config["car"]["speedometer"]["needle_thickness"] * length)
+
+    cx, cy = config["car"]["speedometer"]["center"]
+    x, y = calc_x_y(cx, cy, length, angle)
+
+    pygame.draw.line(window, BLACK_COLOR, (x, y), (cx, cy), thickness)
 
 
 def draw(main_window, game_window, clock, border, cars, num_alive, draw_lines_switch):
@@ -504,6 +560,8 @@ def draw(main_window, game_window, clock, border, cars, num_alive, draw_lines_sw
 
     # render all statistics data
     best_car = get_best_car(cars)
+    draw_speedometer(main_window, best_car)
+
     best_car_sector = [
         "_____Best car_____",
         f"Score: {best_car.score}",
@@ -518,8 +576,8 @@ def draw(main_window, game_window, clock, border, cars, num_alive, draw_lines_sw
 
     best_car.img = \
         pygame.transform.scale(best_car.img,
-                               [int(CAR_INITIAL_SIZE[i] * config["stats"]["best_car"]["img"]["scale"])
-                                for i in range(2)])
+                               (int(CAR_IMG.get_width() * config["stats"]["best_car"]["img"]["scale"]),
+                                int(CAR_IMG.get_height() * config["stats"]["best_car"]["img"]["scale"])))
 
     pos = (config["stats"]["best_car"]["img"]["position"][0],
            config["stats"]["best_car"]["img"]["position"][1] - best_car.img.get_height() // 2)
@@ -713,8 +771,7 @@ def run(config_file_path):
         winner = population.run(main, 100)
         print(winner)
     except pygame.error as e:
-        print(e.__context__)
-        print(e.__traceback__)
+        print(e)
         pass
     save()
 
