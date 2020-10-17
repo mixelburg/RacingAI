@@ -11,23 +11,26 @@ import os
 import json
 import concurrent.futures
 
+from typing import Tuple, List, Union, Dict
+
 pygame.init()
 
 # load config from file
 with open("main-config.json") as main_config:
     config = json.load(main_config)
 
-TRANSPARENT_PIXEL = config["transparent_pixel"]
+TRANSPARENT_PIXEL: Dict[str, int] = config["transparent_pixel"]
 
 # set resolutions
-GAME_WINDOW_RESOLUTION = config["main"]["resolutions"]["game_window"]
-MAIN_WINDOW_RESOLUTION = [int(val * cf)
-                          for val, cf in zip(GAME_WINDOW_RESOLUTION, config["main"]["resolutions"]["main_window"])]
+GAME_WINDOW_RESOLUTION: List[int] = config["main"]["resolutions"]["game_window"]
+MAIN_WINDOW_RESOLUTION: List[int] = [int(val * cf)
+                                     for val, cf in
+                                     zip(GAME_WINDOW_RESOLUTION, config["main"]["resolutions"]["main_window"])]
 
-IMG_SRC_FOLDER = config["main"]["img_src_folder"]
+IMG_SRC_FOLDER: str = config["main"]["img_src_folder"]
 
 # get the images
-CAR_SIZE = MAIN_WINDOW_RESOLUTION[0] * config["car"]["car_size"]
+CAR_SIZE: Union[int, float] = MAIN_WINDOW_RESOLUTION[0] * config["car"]["car_size"]
 CAR_IMGS = [
     pygame.transform.scale(CAR_IMG := pygame.image.load(os.path.join(IMG_SRC_FOLDER,
                                                                      config["car"]["img"].format(i + 1))),
@@ -46,20 +49,19 @@ TRACK = pygame.transform.scale(pygame.image.load(os.path.join(IMG_SRC_FOLDER,
                                                               config["main"]["imgs"]["track"])),
                                GAME_WINDOW_RESOLUTION)
 
-ARROW_SIZE = config["radar"]["arrow"]["arrow_size"] * CAR_SIZE
+ARROW_SIZE: Union[int, float] = config["radar"]["arrow"]["arrow_size"] * CAR_SIZE
 ARROW_IMG = pygame.transform.scale(ARROW_IMG := pygame.image.load(os.path.join(IMG_SRC_FOLDER,
                                                                                config["radar"]["arrow"]["img"])),
                                    (int(ARROW_IMG.get_width() * ARROW_SIZE), int(ARROW_IMG.get_height() * ARROW_SIZE)))
 
-GAUGE_SIZE = config["car"]["speedometer"]["size"] * CAR_SIZE
+GAUGE_SIZE: Union[int, float] = config["car"]["speedometer"]["size"] * CAR_SIZE
 GAUGE_IMG = pygame.transform.scale(GAUGE_IMG := pygame.image.load(os.path.join(IMG_SRC_FOLDER,
                                                                                config["car"]["speedometer"]["img"])),
                                    (int(GAUGE_IMG.get_width() * GAUGE_SIZE), int(GAUGE_IMG.get_height() * GAUGE_SIZE)))
 
-
 # set image positions
-BG_POSITION = config["main"]["imgs"]["position"]
-CAR_POSITION = [int(val * cf) for val, cf in zip(GAME_WINDOW_RESOLUTION, config["car"]["position"])]
+BG_POSITION: List[int] = config["main"]["imgs"]["position"]
+CAR_POSITION: List[int] = [int(val * cf) for val, cf in zip(GAME_WINDOW_RESOLUTION, config["car"]["position"])]
 
 # set fonts
 STAT_FONT = pygame.font.SysFont(config["stats"]["font"]["type"],
@@ -68,16 +70,17 @@ DIST_FONT = pygame.font.SysFont(config["stats"]["font"]["type"],
                                 int(MAIN_WINDOW_RESOLUTION[0] * config["stats"]["font"]["dist_size"]))
 
 # set text positions
-config["stats"]["global"]["position"][1] = int(config["stats"]["global"]["position"][1] * MAIN_WINDOW_RESOLUTION[1])
-config["stats"]["gap"] = int(MAIN_WINDOW_RESOLUTION[0] * config["stats"]["font"]["size"] * config["stats"]["gap"])
+config["stats"]["global"]["position"][1]: int = int(
+    config["stats"]["global"]["position"][1] * MAIN_WINDOW_RESOLUTION[1])
+config["stats"]["gap"]: int = int(MAIN_WINDOW_RESOLUTION[0] * config["stats"]["font"]["size"] * config["stats"]["gap"])
 
-config["stats"]["best_car"]["img"]["scale"] = config["stats"]["best_car"]["img"]["scale"] * CAR_SIZE
-config["stats"]["best_car"]["img"]["position"] = \
+config["stats"]["best_car"]["img"]["scale"]: Union[int, float] = config["stats"]["best_car"]["img"]["scale"] * CAR_SIZE
+config["stats"]["best_car"]["img"]["position"]: List[int] = \
     [int(val * cf) for val, cf in zip(MAIN_WINDOW_RESOLUTION, config["stats"]["best_car"]["img"]["position"])]
 
-config["car"]["speedometer"]["position"] = \
+config["car"]["speedometer"]["position"]: List[int] = \
     [int(val * cf) for val, cf in zip(MAIN_WINDOW_RESOLUTION, config["car"]["speedometer"]["position"])]
-config["car"]["speedometer"]["center"] = \
+config["car"]["speedometer"]["center"]: List[int] = \
     [int(val * cf) for val, cf in zip(MAIN_WINDOW_RESOLUTION, config["car"]["speedometer"]["center"])]
 
 # set some colors
@@ -87,7 +90,7 @@ LIGHT_RED_COLOR = pygame.Color("#990F02")
 GREEN_COLOR = pygame.Color("#3BB143")
 LIGHT_GREEN_COLOR = pygame.Color("#0B6623")
 
-SHOW_RADAR_LINES = config["main"]["show_radar"]
+SHOW_RADAR_LINES: bool = config["main"]["show_radar"]
 
 max_score = 0
 gen_num = 0
@@ -95,7 +98,7 @@ pop_size = 0
 fitness_threshold = 0
 
 
-def timer(on=True):
+def timer(on: bool = True):
     """
     Simple timer decorator.
         Prints function execution time
@@ -121,7 +124,7 @@ def timer(on=True):
     return inner_timer
 
 
-def save():
+def save() -> None:
     """
     Saves simulation info to the results file
     :return: None
@@ -135,7 +138,7 @@ def save():
             results_file.write(f"\n")
 
 
-def blit_rotate_center(surface, image, topleft, angle):
+def blit_rotate_center(surface, image, topleft: Tuple[int, int], angle: Union[float, int]) -> None:
     """
     Rotate a surface and blit it to the window
     :param topleft: the top left position of the image
@@ -150,7 +153,7 @@ def blit_rotate_center(surface, image, topleft, angle):
     surface.blit(rotated_image, new_rect.topleft)
 
 
-def calc_x_y(x, y, dist, angle):
+def calc_x_y(x: int, y: int, dist: int, angle: Union[float, int]) -> Tuple:
     """
     Calculates new (x, y) using given (x, y) ; distance ; angle
     :param x: initial x coordinate
@@ -171,7 +174,7 @@ class Car:
     IMGS = CAR_IMGS
     MAX_VEL = config["car"]["max_speed"]
 
-    def __init__(self, x, y):
+    def __init__(self, x: int, y: int):
         self.img = choice(self.IMGS)
 
         self.x = x
@@ -191,7 +194,7 @@ class Car:
 
         self.score = 0
 
-    def move(self):
+    def move(self) -> None:
         """
         Moves car using current car velocity and friction
         :return: None
@@ -208,7 +211,7 @@ class Car:
         self.x, self.y = calc_x_y(self.x, self.y, self.vel, self.angle)
         self.rx, self.ry = self.x + self.img.get_width() // 2, self.y + self.img.get_height() // 2
 
-    def slow_down(self):
+    def slow_down(self) -> None:
         """
         Lower car velocity by given car friction
         :return: None
@@ -219,7 +222,7 @@ class Car:
         elif self.vel < 0:
             self.vel = 0
 
-    def speed_up(self):
+    def speed_up(self) -> None:
         """
         Increase car velocity by given thrust
         :return: None
@@ -227,7 +230,7 @@ class Car:
         if self.vel < self.MAX_VEL:
             self.vel += self.thrust
 
-    def turn_right(self):
+    def turn_right(self) -> None:
         """
         Turns car right by given tilt speed angle
         :return: None
@@ -236,7 +239,7 @@ class Car:
         if self.vel > 0:
             self.angle -= self.tilt_speed
 
-    def turn_left(self):
+    def turn_left(self) -> None:
         """
         Turns car left by given tilt speed angle
         :return: None
@@ -271,7 +274,7 @@ class Car:
     #             break
     #     return cnt
 
-    def find_distance(self, border, angle, cnt=0):
+    def find_distance(self, border, angle: Union[int, float], cnt: int = 0) -> int:
         """
         Finds distance from car to border at given angle.
             It does it by calculating (x, y) coordinates at given angle and different distances from 0 and till
@@ -293,7 +296,7 @@ class Car:
                 return self.find_distance(border, angle, cnt=cnt + 1)
         return cnt
 
-    def draw(self, window):
+    def draw(self, window) -> None:
         """
         Draws the car and also radar lines if SHOW_RADAR_LINES flag is set to True
         :param window:
@@ -310,7 +313,7 @@ class Car:
                                             self.angle + config["radar"]["angles"][i]),
                                    (self.rx, self.ry), 100)
 
-    def locate(self, border):
+    def locate(self, border) -> List[int]:
         """
         Calculates distances from car to the border at given angles (RADAR_ANGLES)
         :param border:
@@ -341,7 +344,7 @@ class Border:
 
         self.img = BG_IMG
 
-    def draw(self, window):
+    def draw(self, window) -> None:
         """
         Draws (blits) border image on a given surface
         :param window: pygame.Surface object
@@ -386,7 +389,7 @@ class Button:
         self.color = None
         self.restore_color()
 
-    def restore_color(self):
+    def restore_color(self) -> None:
         """
         Restores button color to default value
         :return: None
@@ -396,7 +399,7 @@ class Button:
         else:
             self.color = RED_COLOR
 
-    def switch(self):
+    def switch(self) -> None:
         """
         Switches the button (on / off) by changing SHOW_RADAR_LINES flag
         :return: None
@@ -406,7 +409,7 @@ class Button:
 
         self.restore_color()
 
-    def draw(self, win, outline_color=None, outline_size=2):
+    def draw(self, win, outline_color=None, outline_size: int = 2) -> None:
         """
         Draws (blits) the button on a given window
         :param win: pygame.Surface object
@@ -430,7 +433,7 @@ class Button:
             win.blit(text, (int(self.x + (self.width / 2 - text.get_width() / 2)),
                             int(self.y + (self.height / 2 - text.get_height() / 2))))
 
-    def is_over(self, pos):
+    def is_over(self, pos: Tuple[int, int]) -> bool:
         """
         Checks if mouse cursor is over the button
         :param pos: mouse cursor position
@@ -461,7 +464,7 @@ def get_best_car(cars):
     return best_car
 
 
-def font_render(window, font, data, color, position):
+def font_render(window, font, data: str, color, position: Union[Tuple[int, int], List[int]]) -> None:
     """
     Renders given text (data) using given font, color, position
     on a given surface (window)
@@ -478,7 +481,7 @@ def font_render(window, font, data, color, position):
     window.blit(text, position)
 
 
-def draw_in_circle(window, objects, center, radius):
+def draw_in_circle(window, objects, center: Union[Tuple[int, int], List[int]], radius: int) -> None:
     """
     Draws given objects in circle with given radius on given surface
     :param window: pygame.Surface object
@@ -506,7 +509,7 @@ def draw_in_circle(window, objects, center, radius):
         blit_rotate_center(window, objects[i], pos, config["radar"]["angles"][i])
 
 
-def draw_speedometer(window, car):
+def draw_speedometer(window, car) -> None:
     """
     Draws (blits) speedometer picture on the given surface (window)
     :param window: pygame.Surface object
@@ -526,7 +529,7 @@ def draw_speedometer(window, car):
     pygame.draw.line(window, BLACK_COLOR, (x, y), (cx, cy), thickness)
 
 
-def draw(main_window, game_window, clock, border, cars, num_alive, draw_lines_switch):
+def draw(main_window, game_window, clock, border, cars, num_alive: int, draw_lines_switch) -> None:
     """
     Main "draw" method
     Draws given objects of given surfaces
@@ -605,7 +608,7 @@ def draw(main_window, game_window, clock, border, cars, num_alive, draw_lines_sw
         font_render(main_window, STAT_FONT, text, RED_COLOR, pos)
 
 
-def process_car(car, cars, gens, nets, border, i, counter):
+def process_car(car, cars, gens, nets, border, i: int, counter: int) -> None:
     """
     Processes single car (moves it, draws it, checks for collision ...)
     :param car: Car object
@@ -653,7 +656,7 @@ def process_car(car, cars, gens, nets, border, i, counter):
 
 
 @timer(on=config["main"]["show_times"])
-def process_all_cars(cars, gens, nets, border, counter):
+def process_all_cars(cars, gens, nets, border, counter: int) -> None:
     """
     Processes all cars
     :param cars: list of Car objects
@@ -669,7 +672,7 @@ def process_all_cars(cars, gens, nets, border, counter):
             executor.submit(process_car, car, cars, gens, nets, border, i, counter)
 
 
-def main(genomes, neat_config):
+def main(genomes, neat_config) -> None:
     """
     Main program function
     :param genomes: neat-genomes
@@ -745,7 +748,7 @@ def main(genomes, neat_config):
     gen_num += 1
 
 
-def run(config_file_path):
+def run(config_file_path: str) -> None:
     """
     Main function for NEAT-NN
     :param config_file_path: path to a config file
@@ -763,7 +766,6 @@ def run(config_file_path):
     population.add_reporter(neat.StdOutReporter(True))
     statistics = neat.StatisticsReporter()
     population.add_reporter(statistics)
-
     try:
         winner = population.run(main, 1000)
         print(winner)
