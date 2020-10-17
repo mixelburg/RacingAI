@@ -24,8 +24,6 @@ GAME_WINDOW_RESOLUTION = config["main"]["resolutions"]["game_window"]
 MAIN_WINDOW_RESOLUTION = [int(val * cf)
                           for val, cf in zip(GAME_WINDOW_RESOLUTION, config["main"]["resolutions"]["main_window"])]
 
-FRAME_RATE = config["main"]["frame_rate"]
-
 IMG_SRC_FOLDER = config["main"]["img_src_folder"]
 
 # get the images
@@ -59,13 +57,8 @@ GAUGE_IMG = pygame.transform.scale(GAUGE_IMG := pygame.image.load(os.path.join(I
                                    (int(GAUGE_IMG.get_width() * GAUGE_SIZE), int(GAUGE_IMG.get_height() * GAUGE_SIZE)))
 
 
-# set radar params
-RADAR_ANGLES = config["radar"]["angles"]
-RADAR_MAX_LEN = config["radar"]["max_len"]
-
 # set image positions
 BG_POSITION = config["main"]["imgs"]["position"]
-TRACK_POSITION = BG_POSITION
 CAR_POSITION = [int(val * cf) for val, cf in zip(GAME_WINDOW_RESOLUTION, config["car"]["position"])]
 
 # set fonts
@@ -94,12 +87,12 @@ LIGHT_RED_COLOR = pygame.Color("#990F02")
 GREEN_COLOR = pygame.Color("#3BB143")
 LIGHT_GREEN_COLOR = pygame.Color("#0B6623")
 
-SHOW_FRAME_TIME = config["main"]["show_times"]
 SHOW_RADAR_LINES = config["main"]["show_radar"]
 
 max_score = 0
 gen_num = 0
 pop_size = 0
+fitness_threshold = 0
 
 
 def timer(on=True):
@@ -133,12 +126,13 @@ def save():
     Saves simulation info to the results file
     :return: None
     """
-    with open("results.txt", "a+") as results_file:
-        results_file.write(f"Date: {datetime.datetime.now().ctime()}\n")
-        results_file.write(f"Generations: {gen_num}\n")
-        results_file.write(f"Pop size: {pop_size}\n")
-        results_file.write(f"Max score: {max_score}\n")
-        results_file.write(f"\n")
+    if max_score > 10000:
+        with open("results.txt", "a+") as results_file:
+            results_file.write(f"Date: {datetime.datetime.now().ctime()}\n")
+            results_file.write(f"Generations: {gen_num}\n")
+            results_file.write(f"Pop size: {pop_size}\n")
+            results_file.write(f"Max score: {max_score}\n")
+            results_file.write(f"\n")
 
 
 def blit_rotate_center(surface, image, topleft, angle):
@@ -282,6 +276,7 @@ class Car:
         Finds distance from car to border at given angle.
             It does it by calculating (x, y) coordinates at given angle and different distances from 0 and till
             the pixel at new coordinates wont be transparent (r: 255, g: 255, b: 255, a: 0)
+        :param cnt: simple distance counter
         :param border: border object
         :param angle: radar angle
         :return: distance to the border
@@ -294,7 +289,7 @@ class Car:
         # check, if pixel is transparent
         if pixel[0] == TRANSPARENT_PIXEL["R"] and pixel[1] == TRANSPARENT_PIXEL["G"] \
                 and pixel[2] == TRANSPARENT_PIXEL["B"] and pixel[3] == TRANSPARENT_PIXEL["A"]:
-            if cnt < RADAR_MAX_LEN:
+            if cnt < config["radar"]["max_len"]:
                 return self.find_distance(border, angle, cnt=cnt + 1)
         return cnt
 
@@ -311,7 +306,8 @@ class Car:
         if SHOW_RADAR_LINES:
             for i in range(len(self.distances)):
                 pygame.draw.aaline(window, RED_COLOR,
-                                   calc_x_y(self.rx, self.ry, self.distances[i], self.angle + RADAR_ANGLES[i]),
+                                   calc_x_y(self.rx, self.ry, self.distances[i],
+                                            self.angle + config["radar"]["angles"][i]),
                                    (self.rx, self.ry), 100)
 
     def locate(self, border):
@@ -321,7 +317,7 @@ class Car:
         :return: list with distances
         """
         for i in range(len(self.distances)):
-            self.distances[i] = self.find_distance(border, self.angle + RADAR_ANGLES[i])
+            self.distances[i] = self.find_distance(border, self.angle + config["radar"]["angles"][i])
 
         return self.distances
 
@@ -545,7 +541,7 @@ def draw(main_window, game_window, clock, border, cars, num_alive, draw_lines_sw
     """
     main_window.blit(MAIN_BG_IMG, (0, 0))
     main_window.blit(game_window, (MAIN_WINDOW_RESOLUTION[0] - GAME_WINDOW_RESOLUTION[0], 0))
-    game_window.blit(TRACK, TRACK_POSITION)
+    game_window.blit(TRACK, BG_POSITION)
     border.draw(game_window)
     draw_lines_switch.draw(main_window, outline_color=BLACK_COLOR, outline_size=3)
 
@@ -650,13 +646,13 @@ def process_car(car, cars, gens, nets, border, i, counter):
             nets.pop(i)
             gens.pop(i)
     # remove car if its too good
-    if car.score >= 50000:
+    if gens[i].fitness > fitness_threshold + 10:
         cars.pop(i)
         nets.pop(i)
         gens.pop(i)
 
 
-@timer(on=SHOW_FRAME_TIME)
+@timer(on=config["main"]["show_times"])
 def process_all_cars(cars, gens, nets, border, counter):
     """
     Processes all cars
@@ -713,7 +709,7 @@ def main(genomes, neat_config):
 
     # main program loop
     while True:
-        clock.tick(FRAME_RATE)
+        clock.tick(config["main"]["frame_rate"])
         counter += 1
 
         num_alive = len(cars)
@@ -759,8 +755,9 @@ def run(config_file_path):
                                      neat.DefaultSpeciesSet, neat.DefaultStagnation,
                                      config_file_path)
 
-    global pop_size
+    global pop_size, fitness_threshold
     pop_size = neat_config.pop_size
+    fitness_threshold = neat_config.fitness_threshold
 
     population = neat.Population(neat_config)
     population.add_reporter(neat.StdOutReporter(True))
@@ -768,7 +765,7 @@ def run(config_file_path):
     population.add_reporter(statistics)
 
     try:
-        winner = population.run(main, 100)
+        winner = population.run(main, 1000)
         print(winner)
     except pygame.error as e:
         print(e)
